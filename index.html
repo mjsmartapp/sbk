@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBK SAVINGS LOGIN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- RESET & GLOBAL --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* --- CONTAINER CARD --- */
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        h2 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- INPUTS --- */
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 10px 0;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9f9f9;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+        input:focus, select:focus {
+            border-color: #764ba2;
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        }
+
+        /* --- BUTTON --- */
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* --- ERROR MESSAGE --- */
+        .error {
+            color: #d32f2f;
+            background-color: #ffebee;
+            font-size: 13px;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ffcdd2;
+            display: none;
+        }
+
+        .hidden { display: none; }
+
+        /* --- LOADER BAR --- */
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: transparent;
+            z-index: 9999;
+            display: none;
+        }
+        .loader-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+            width: 30%;
+            position: absolute;
+            animation: loading 1s infinite ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        @keyframes loading {
+            0% { left: -30%; width: 30%; }
+            50% { width: 50%; }
+            100% { left: 100%; width: 30%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="loader-container">
+        <div class="loader-bar"></div>
+    </div>
+
+    <div class="container">
+        <div id="loginForm">
+            <h2>Welcome Back</h2>
+            <input type="tel" id="loginPhone" placeholder="Phone Number" maxlength="10">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button id="btnLogin">Sign In</button>
+        </div>
+
+        <p id="message" class="error"></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyApYK_C_C8CRy8FpIO3tskc1SFl74ID01Y",
+            authDomain: "tirupathistore-244af.firebaseapp.com",
+            databaseURL: "https://tirupathistore-244af-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tirupathistore-244af",
+            storageBucket: "tirupathistore-244af.firebasestorage.app",
+            messagingSenderId: "153023171028",
+            appId: "1:153023171028:web:b18d29deccf70bcd906e41"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // --- Auto Redirect if already logged in ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Determine where to go if they visit index.html while logged in
+                redirectUser(user.uid);
+            }
+        });
+
+        const msgBox = document.getElementById('message');
+        const loader = document.getElementById('loader');
+        
+        const getEmail = (phone) => `${phone}@tirupathistore.com`;
+        const showLoader = () => { loader.style.display = 'block'; msgBox.style.display = 'none'; };
+        const hideLoader = () => { loader.style.display = 'none'; };
+
+        const redirectUser = (uid) => {
+            get(child(ref(db), `users/${uid}`)).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const role = snapshot.val().role;
+                    window.location.href = role === 'admin' ? 'admin.html' : 'user.html';
+                } else {
+                    hideLoader();
+                    msgBox.innerText = "User data not found.";
+                    msgBox.style.display = 'block';
+                }
+            }).catch((err) => {
+                hideLoader();
+                // If we are just checking auth state on load, we might not want to show error
+            });
+        };
+
+        // --- LOGIN LOGIC ---
+        document.getElementById('btnLogin').addEventListener('click', () => {
+            const phone = document.getElementById('loginPhone').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (phone.length !== 10 || isNaN(phone)) {
+                msgBox.innerText = "Invalid Phone Number.";
+                msgBox.style.display = 'block';
+                return;
+            }
+
+            showLoader();
+            const email = getEmail(phone);
+
+            // 1. Set Persistence (Local Storage)
+            // 2. Sign In
+            setPersistence(auth, browserLocalPersistence)
+                .then(() => {
+                    return signInWithEmailAndPassword(auth, email, password);
+                })
+                .then((userCredential) => {
+                    // Success: Redirect handles next step
+                    redirectUser(userCredential.user.uid);
+                })
+                .catch((error) => {
+                    hideLoader();
+                    msgBox.innerText = "Invalid Phone Number or Password.";
+                    msgBox.style.display = 'block';
+                });
+        });
+    </script>
+</body>
+</html>

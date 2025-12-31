@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Dashboard - SBK Savings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* --- PREMIUM VARIABLES --- */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --accent-primary: #38bdf8; /* Sky Blue */
+            --accent-success: #4ade80; /* Soft Green */
+            --accent-warning: #facc15; /* Soft Yellow */
+            --accent-danger: #f87171; /* Soft Red */
+            --accent-purple: #c084fc; /* Soft Purple */
+            --font-main: 'Outfit', sans-serif;
+        }
+
+        /* --- RESET & BASE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font-main);
+            background: #0f172a; 
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(192, 132, 252, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(74, 222, 128, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* --- LAYOUT CONTAINER --- */
+        .app-container {
+            width: 100%;
+            max-width: 1200px; /* Wider for full screen feel */
+            margin-top: 10px;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- GLASS PANEL STYLE --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            overflow: hidden;
+        }
+
+        /* --- HEADER SECTION --- */
+        .header-panel {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h2 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .user-info span {
+            color: var(--accent-primary);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logout-btn {
+            background: rgba(248, 113, 113, 0.1);
+            color: var(--accent-danger);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logout-btn:hover {
+            background: var(--accent-danger);
+            color: white;
+            box-shadow: 0 4px 15px rgba(248, 113, 113, 0.3);
+        }
+
+        /* --- STATS GRID --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Stat Colors */
+        .stat-card.blue .stat-icon-wrapper { background: rgba(56, 189, 248, 0.15); color: var(--accent-primary); }
+        .stat-card.orange .stat-icon-wrapper { background: rgba(250, 204, 21, 0.15); color: var(--accent-warning); }
+        .stat-card.green .stat-icon-wrapper { background: rgba(74, 222, 128, 0.15); color: var(--accent-success); }
+        .stat-card.purple .stat-icon-wrapper { background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); }
+
+        .stat-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        /* Text Color Modifiers */
+        .text-pending { color: var(--accent-warning); }
+        .text-success { color: var(--accent-success); }
+        .text-withdraw { color: var(--accent-purple); }
+        .text-advance { color: #94a3b8; }
+
+        /* --- TABLE & FILTER SECTION --- */
+        .table-panel {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* Ensure full height usage if possible */
+        }
+        
+        .table-header-row {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Filters */
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-grow: 1;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            position: relative;
+            min-width: 200px;
+        }
+        .search-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 10px 12px 10px 36px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        .search-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-primary);
+        }
+
+        .custom-select {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .custom-select option { background: #1e293b; color: white; }
+
+        /* --- COMPACT TABLE --- */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 600px; /* Limits height on huge screens */
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap; /* Prevents text wrap on small screens */
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(30, 41, 59, 0.5); /* Sticky header bg */
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        /* Status Pills */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 80px;
+            text-align: center;
+        }
+        .pill-paid { background: rgba(74, 222, 128, 0.15); color: var(--accent-success); border: 1px solid rgba(74, 222, 128, 0.2); }
+        .pill-pending { background: rgba(250, 204, 21, 0.15); color: var(--accent-warning); border: 1px solid rgba(250, 204, 21, 0.2); }
+        .pill-advance { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); }
+        .pill-withdraw { background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.2); }
+
+        .date-subtext {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .amount-cell {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-size: 15px;
+        }
+
+        /* --- LOADER --- */
+        .loader-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; z-index: 9999;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 3px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text { color: var(--text-muted); font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* --- CUSTOM POPUP MODAL --- */
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .popup-overlay.active {
+            opacity: 1;
+        }
+
+        .popup-content {
+            background: #1e293b;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .popup-overlay.active .popup-content {
+            transform: scale(1);
+        }
+
+        .popup-icon {
+            width: 60px; height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+        .icon-warn { color: var(--accent-warning); background: rgba(250, 204, 21, 0.15); }
+        .icon-error { color: var(--accent-danger); background: rgba(248, 113, 113, 0.15); }
+        .icon-success { color: var(--accent-success); background: rgba(74, 222, 128, 0.15); }
+
+        .popup-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+        .popup-msg {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .popup-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .popup-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+        .btn-cancel:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+        
+        .btn-confirm {
+            background: var(--accent-danger);
+            color: white;
+            box-shadow: 0 4px 15px rgba(248, 113, 113, 0.3);
+        }
+        .btn-confirm:hover { transform: translateY(-2px); }
+        
+        .btn-ok {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+
+        /* --- RESPONSIVE MOBILE TWEAKS --- */
+        @media (max-width: 768px) {
+            body { padding: 10px; align-items: flex-start; }
+            .app-container { gap: 16px; margin-top: 5px; }
+            
+            /* Header */
+            .header-panel { padding: 15px 20px; flex-direction: column; gap: 15px; align-items: flex-start; }
+            .logout-btn { width: 100%; justify-content: center; }
+            
+            /* Stats */
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+            .stat-icon-wrapper { margin-bottom: 8px; width: 40px; height: 40px; font-size: 18px; }
+            .stat-value { font-size: 18px; }
+            .stat-label { font-size: 11px; }
+
+            /* Table Header & Filters */
+            .table-header-row { padding: 15px; flex-direction: column; align-items: stretch; gap: 12px; }
+            .filter-group { flex-direction: row; gap: 8px; }
+            .search-wrapper { width: 100%; flex-basis: 100%; } /* Search full width */
+            .custom-select { flex-grow: 1; }
+
+            /* Compact Table Cells */
+            th, td { padding: 10px 12px; font-size: 13px; }
+            .status-pill { padding: 3px 8px; font-size: 10px; min-width: 70px; }
+            .amount-cell { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="loader-container">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading Dashboard</div>
+    </div>
+
+    <div id="dashboard" class="app-container">
+        
+        <div class="glass-panel header-panel">
+            <div class="user-info">
+                <h2 id="userName">User Name</h2>
+                <span id="userPhone"><i class="fas fa-phone-alt"></i> ...</span>
+            </div>
+            <button id="logoutBtn" class="logout-btn">
+                <i class="fas fa-power-off"></i> Logout
+            </button>
+        </div>
+
+        <div class="stats-grid">
+            
+            <div class="stat-card blue">
+                <div class="stat-icon-wrapper"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Monthly Pay</div>
+                    <div class="stat-value" id="monthlyPay">₹0</div>
+                </div>
+            </div>
+
+            <div class="stat-card orange">
+                <div class="stat-icon-wrapper"><i class="fas fa-calendar-day"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Current Month</div>
+                    <div class="stat-value" id="currentStatus">Checking...</div>
+                </div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-icon-wrapper"><i class="fas fa-piggy-bank"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Paid</div>
+                    <div class="stat-value text-success" id="totalPaid">₹0</div>
+                </div>
+            </div>
+
+            <div class="stat-card purple">
+                <div class="stat-icon-wrapper"><i class="fas fa-wallet"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Withdrawn</div>
+                    <div class="stat-value text-withdraw" id="totalWithdrawn">₹0</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="glass-panel table-panel">
+            
+            <div class="table-header-row">
+                <div class="table-title">
+                    <i class="fas fa-list-ul" style="color: var(--accent-primary);"></i> History
+                </div>
+                
+                <div class="filter-group">
+                    <div class="search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search...">
+                    </div>
+                    
+                    <select id="statusFilter" class="custom-select">
+                        <option value="">All</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Advance">Advance</option>
+                        <option value="Withdrawal">Withdraw</option>
+                    </select>
+
+                    <input type="month" id="monthFilter" class="custom-select" style="color-scheme: dark;">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Month / Date</th>
+                            <th style="width: 30%;">Status</th>
+                            <th style="width: 30%;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading Data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="customPopup" class="popup-overlay">
+        <div class="popup-content">
+            <div id="popupIcon" class="popup-icon"></div>
+            <h3 id="popupTitle" class="popup-title"></h3>
+            <p id="popupMessage" class="popup-msg"></p>
+            <div id="popupActions" class="popup-actions">
+                </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, child, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyApYK_C_C8CRy8FpIO3tskc1SFl74ID01Y",
+            authDomain: "tirupathistore-244af.firebaseapp.com",
+            databaseURL: "https://tirupathistore-244af-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tirupathistore-244af",
+            storageBucket: "tirupathistore-244af.firebasestorage.app",
+            messagingSenderId: "153023171028",
+            appId: "1:153023171028:web:b18d29deccf70bcd906e41"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const loader = document.getElementById('loader');
+        const dashboard = document.getElementById('dashboard');
+        
+        // Popup Elements
+        const popupOverlay = document.getElementById('customPopup');
+        const popupIcon = document.getElementById('popupIcon');
+        const popupTitle = document.getElementById('popupTitle');
+        const popupMessage = document.getElementById('popupMessage');
+        const popupActions = document.getElementById('popupActions');
+
+        // Data Store
+        let myPayments = [];
+        let myWithdrawals = [];
+        let combinedHistory = []; 
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                initUserDashboard(user.uid);
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        function initUserDashboard(uid) {
+            // 1. Fetch User Profile
+            onValue(ref(db, `users/${uid}`), (snapshot) => {
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    document.getElementById('userName').innerText = userData.name || "User";
+                    document.getElementById('userPhone').innerHTML = `<i class="fas fa-phone-alt"></i> ${userData.phone || ""}`;
+                    document.getElementById('monthlyPay').innerText = `₹${userData.monthlyPay || 0}`;
+                    
+                    loader.style.display = 'none';
+                    dashboard.style.display = 'flex';
+                }
+            });
+
+            // 2. Fetch Payments
+            onValue(ref(db, 'payments'), (snapshot) => {
+                const all = snapshot.val() || {};
+                myPayments = [];
+                Object.values(all).forEach(p => {
+                    if (p.userId === uid) {
+                        myPayments.push(p);
+                    }
+                });
+                refreshDataAndTable();
+            });
+
+            // 3. Fetch Withdrawals
+            onValue(ref(db, 'withdrawals'), (snapshot) => {
+                const all = snapshot.val() || {};
+                myWithdrawals = [];
+                Object.values(all).forEach(w => {
+                    if (w.withdrawnBy === uid) {
+                        myWithdrawals.push(w);
+                    }
+                });
+                refreshDataAndTable();
+            });
+        }
+
+        function refreshDataAndTable() {
+            // Update Totals
+            let totalPaid = 0;
+            let totalWithdrawn = 0;
+
+            myPayments.forEach(p => {
+                if (p.status === 'Paid' || p.status === 'Advance') {
+                    totalPaid += Number(p.amount || 0);
+                }
+            });
+            myWithdrawals.forEach(w => {
+                totalWithdrawn += Number(w.withdrawnAmount || 0);
+            });
+
+            document.getElementById('totalPaid').innerText = `₹${totalPaid}`;
+            document.getElementById('totalWithdrawn').innerText = `₹${totalWithdrawn}`;
+            
+            updateCurrentMonthStatus();
+
+            // Prepare Combined Data for Filtering
+            const paymentRows = myPayments.map(p => ({
+                month: p.month,
+                type: 'Payment',
+                status: p.status, // Paid, Pending, Advance
+                amount: p.amount,
+                timestamp: p.timestamp
+            }));
+
+            const withdrawalRows = myWithdrawals.map(w => ({
+                month: w.month,
+                type: 'Withdrawal',
+                status: 'Withdrawal', 
+                amount: w.netPayoutAmount ? `${w.netPayoutAmount} (Net)` : w.withdrawnAmount,
+                timestamp: w.timestamp
+            }));
+
+            // Merge and Sort
+            combinedHistory = [...paymentRows, ...withdrawalRows].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            // Initial Render
+            applyFilters();
+        }
+
+        function updateCurrentMonthStatus() {
+            const now = new Date();
+            const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const currentPayment = myPayments.find(p => p.month === currentMonthKey);
+            const statusEl = document.getElementById('currentStatus');
+            
+            // Remove previous color classes
+            statusEl.classList.remove('text-success', 'text-pending', 'text-advance');
+
+            if (currentPayment) {
+                statusEl.innerText = currentPayment.status;
+                if (currentPayment.status === 'Paid') {
+                    statusEl.classList.add('text-success');
+                } else if (currentPayment.status === 'Advance') {
+                    statusEl.classList.add('text-advance');
+                } else {
+                    statusEl.classList.add('text-pending');
+                }
+            } else {
+                statusEl.innerText = "Pending";
+                statusEl.classList.add('text-pending');
+            }
+        }
+
+        // --- FILTER LOGIC ---
+        function applyFilters() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const monthFilter = document.getElementById('monthFilter').value;
+
+            const filteredData = combinedHistory.filter(item => {
+                if (monthFilter && item.month !== monthFilter) return false;
+                if (statusFilter && item.status !== statusFilter) return false;
+                if (searchText) {
+                    const searchStr = `${item.month} ${item.status} ${item.amount}`.toLowerCase();
+                    if (!searchStr.includes(searchText)) return false;
+                }
+                return true;
+            });
+
+            renderTable(filteredData);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 30px; color: var(--text-muted);">No matching records found.</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                
+                let pillClass = "pill-pending";
+                let displayStatus = item.status;
+
+                if (item.type === 'Payment') {
+                    if(item.status === 'Paid') pillClass = "pill-paid";
+                    if(item.status === 'Advance') pillClass = "pill-advance";
+                } else {
+                    pillClass = "pill-withdraw";
+                    displayStatus = "Withdraw";
+                }
+
+                const dateObj = item.timestamp ? new Date(item.timestamp) : new Date();
+                const dateStr = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                row.innerHTML = `
+                    <td>
+                        <div style="font-weight: 600; color: white; font-size: 14px;">${item.month}</div>
+                        <div class="date-subtext">${dateStr}</div>
+                    </td>
+                    <td><span class="status-pill ${pillClass}">${displayStatus}</span></td>
+                    <td class="amount-cell">₹${item.amount}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- CUSTOM POPUP SYSTEM ---
+        function showCustomPopup(type, title, message, onConfirmCallback) {
+            popupTitle.innerText = title;
+            popupMessage.innerText = message;
+            popupActions.innerHTML = '';
+            popupIcon.className = 'popup-icon'; // reset
+
+            if (type === 'confirm') {
+                popupIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                popupIcon.classList.add('icon-warn');
+                
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'popup-btn btn-cancel';
+                cancelBtn.innerText = 'Cancel';
+                cancelBtn.onclick = closePopup;
+
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'popup-btn btn-confirm';
+                confirmBtn.innerText = 'Logout';
+                confirmBtn.onclick = () => {
+                    closePopup();
+                    if (onConfirmCallback) onConfirmCallback();
+                };
+
+                popupActions.appendChild(cancelBtn);
+                popupActions.appendChild(confirmBtn);
+
+            } else if (type === 'error') {
+                popupIcon.innerHTML = '<i class="fas fa-times"></i>';
+                popupIcon.classList.add('icon-error');
+                
+                const okBtn = document.createElement('button');
+                okBtn.className = 'popup-btn btn-cancel';
+                okBtn.innerText = 'Close';
+                okBtn.onclick = closePopup;
+                
+                popupActions.appendChild(okBtn);
+            }
+
+            popupOverlay.style.display = 'flex';
+            // Slight delay to allow display flex to apply before opacity transition
+            setTimeout(() => {
+                popupOverlay.classList.add('active');
+            }, 10);
+        }
+
+        function closePopup() {
+            popupOverlay.classList.remove('active');
+            setTimeout(() => {
+                popupOverlay.style.display = 'none';
+            }, 300); // match transition duration
+        }
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('monthFilter').addEventListener('input', applyFilters);
+
+        // Updated Logout Logic using Custom Popup
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            showCustomPopup('confirm', 'Confirm Logout', 'Are you sure you want to log out of your account?', () => {
+                loader.style.display = 'flex';
+                signOut(auth).then(() => {
+                    window.location.href = "index.html";
+                }).catch((error) => {
+                    loader.style.display = 'none';
+                    showCustomPopup('error', 'Logout Failed', error.message);
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>

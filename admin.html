@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* --- RESET & VARIABLES --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --sidebar-width: 260px;
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --bg-color: #f4f6f9;
+            --text-dark: #333;
+            --text-light: #ecf0f1;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --info-color: #9b59b6; 
+            --advance-color: #34495e;
+            --withdrawal-color: #e67e22;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- LOADER --- */
+        .loader-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 4px; z-index: 2000;
+            display: block; background: transparent;
+        }
+        .loader-bar {
+            height: 100%; width: 30%; background-color: var(--accent-color); position: absolute;
+            animation: loading 1s infinite ease-in-out;
+        }
+        @keyframes loading {
+            0% { left: -30%; width: 30%; }
+            50% { width: 50%; }
+            100% { left: 100%; width: 30%; }
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            position: fixed;
+            height: 100%;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .logo-section {
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .logo-section h2 { font-weight: 600; font-size: 22px; letter-spacing: 1px; }
+
+        .nav-links { list-style: none; flex-grow: 1; }
+        .nav-item {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            color: rgba(255,255,255,0.7);
+        }
+        .nav-item i { margin-right: 15px; width: 20px; text-align: center; }
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            transform: translateX(5px);
+        }
+
+        .logout-btn {
+            padding: 15px;
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logout-btn:hover { background-color: var(--accent-color); color: white; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            width: calc(100% - var(--sidebar-width));
+            transition: margin-left 0.3s ease, width 0.3s ease;
+            display: none;
+        }
+
+        /* --- HEADER (Mobile) --- */
+        .top-bar {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #2c3e50;
+            color: white;
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .menu-toggle { font-size: 24px; cursor: pointer; }
+
+        /* --- VIEWS --- */
+        .view-section { display: none; animation: fadeIn 0.4s ease; }
+        .view-section.active-view { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1.page-title { margin-bottom: 25px; color: var(--secondary-color); font-weight: 600; border-bottom: 2px solid #ddd; padding-bottom: 10px; display: inline-block; }
+
+        /* --- CARDS & STATS --- */
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .stat-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+        
+        .stat-card { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            border-left: 5px solid var(--primary-color); 
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card h3 { font-size: 14px; color: #888; margin-bottom: 5px; }
+        .stat-card .value { font-size: 24px; font-weight: 600; color: #333; }
+
+        /* Withdrawal Card Specifics */
+        .stat-card.clickable { cursor: pointer; border-left-color: var(--withdrawal-color); }
+        .stat-card.clickable:hover { background-color: #fdf2e9; }
+        .stat-card.clickable h3 { color: var(--withdrawal-color); }
+        .stat-card.clickable i { font-size: 24px; color: var(--withdrawal-color); margin-bottom: 10px; display: block; }
+
+        /* --- USER GRID LAYOUT --- */
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .user-card-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary-color);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .user-card-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .uc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .uc-name { font-size: 18px; font-weight: 600; color: #333; }
+        .uc-role { font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 500; text-transform: uppercase; }
+        
+        .uc-details { margin-bottom: 20px; flex-grow: 1; }
+        .uc-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #555; }
+        .uc-row strong { color: #888; font-weight: 500; }
+
+        .uc-actions { border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: flex-end; gap: 10px; }
+        .uc-actions.center-actions { justify-content: center; }
+
+        /* --- STATUS BADGES --- */
+        .status-badge { padding: 4px 8px; border-radius: 4px; color: white; font-weight: 600; font-size: 12px; }
+        .status-paid { background-color: var(--success-color); }
+        .status-pending { background-color: var(--warning-color); }
+        .status-advance { background-color: var(--advance-color); }
+        .status-withdrawal { background-color: var(--withdrawal-color); }
+
+        /* --- MODAL (POPUP) --- */
+        .modal {
+            display: none; 
+            position: fixed; z-index: 1500; 
+            left: 0; top: 0; width: 100%; height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 25px; 
+            border: 1px solid #888; 
+            width: 90%; max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: black; }
+
+        /* --- HISTORY TABLE --- */
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .history-table th, .history-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; font-size: 14px; }
+        .history-table th { background-color: #f8f9fa; color: #666; font-weight: 600; }
+        .history-table td { color: #333; }
+
+        /* --- FORMS --- */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #555; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; }
+        
+        .btn-primary { background: var(--primary-color); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%; }
+        .btn-primary:hover { background: #2980b9; }
+
+        .btn-add { background: var(--success-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; float: right; }
+        .btn-add:hover { background: #27ae60; }
+
+        /* --- ACTION BUTTONS --- */
+        .action-btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; color: white; transition: 0.3s; }
+        .btn-edit { background-color: var(--warning-color); }
+        .btn-delete { background-color: var(--accent-color); }
+        .btn-pay { background-color: var(--success-color); }
+        .btn-history { background-color: var(--info-color); }
+
+        /* BADGES */
+        .badge-admin { background-color: rgba(231, 76, 60, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
+        .badge-user { background-color: rgba(46, 204, 113, 0.1); color: var(--success-color); border: 1px solid var(--success-color); }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 260px; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; padding-top: 80px; }
+            .top-bar { display: flex; }
+            .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+            .overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="loader-container">
+        <div class="loader-bar"></div>
+    </div>
+
+    <div class="top-bar">
+        <h3>Admin Panel</h3>
+        <div class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+    </div>
+
+    <div class="overlay" onclick="toggleSidebar()"></div>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="logo-section">
+            <h2>Tirupathi Store</h2>
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item active" onclick="switchView('dashboard', this)">
+                <i class="fas fa-home"></i> Dashboard
+            </li>
+            <li class="nav-item" onclick="switchView('payment', this)">
+                <i class="fas fa-credit-card"></i> Payment
+            </li>
+            <li class="nav-item" onclick="switchView('add-users', this)">
+                <i class="fas fa-users"></i> Users & Add
+            </li>
+        </ul>
+        <div class="logout-btn" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </div>
+    </nav>
+
+    <main class="main-content" id="mainContent">
+        
+        <div id="view-dashboard" class="view-section active-view">
+            <h1 class="page-title">Dashboard Overview</h1>
+            
+            <div class="stat-grid">
+                <div class="stat-card" style="border-left-color: #3498db;">
+                    <h3>Total Users</h3>
+                    <div class="value" id="dashboardTotalUsers">0</div>
+                </div>
+                
+                <div class="stat-card" style="border-left-color: #2ecc71;">
+                    <h3>Received Amount</h3>
+                    <div class="value" id="dashboardReceivedAmount" style="color: #2ecc71;">₹0</div>
+                </div>
+
+                <div class="stat-card" style="border-left-color: #e74c3c;">
+                    <h3>Pending Payments</h3>
+                    <div class="value" id="dashboardPendingCount" style="color: #e74c3c;">0</div>
+                </div>
+
+                <div class="stat-card" style="border-left-color: #f39c12;">
+                    <h3>Pending Amount</h3>
+                    <div class="value" id="dashboardPendingAmount" style="color: #f39c12;">₹0</div>
+                </div>
+
+                <div class="stat-card" style="border-left-color: var(--info-color);">
+                    <h3>Interest Amount (3%)</h3>
+                    <div class="value" id="dashboardInterestAmount" style="color: var(--info-color);">₹0</div>
+                </div>
+
+                <div class="stat-card clickable" onclick="openWithdrawalModal()">
+                    <h3>Withdrawal</h3>
+                    <div style="font-weight: 500; font-size: 14px; color: #555; margin-top: 5px;">
+                        <i class="fas fa-hand-holding-usd"></i> Click to Withdraw
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>System Status</h3>
+                <p style="margin-top: 10px; color: #666;">
+                    Welcome back, Admin! <br>
+                    <strong id="adminPhoneDisplay" style="color: #333;">Loading ID...</strong>
+                </p>
+            </div>
+        </div>
+
+        <div id="view-payment" class="view-section">
+            <h1 class="page-title">Payment Management</h1>
+            <div id="paymentGrid" class="user-grid">
+                 <div style="text-align:center; width: 100%; grid-column: 1/-1; padding: 20px;">Loading payments...</div>
+            </div>
+        </div>
+
+        <div id="view-add-users" class="view-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 class="page-title" style="margin-bottom: 0;">User Management</h1>
+                <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> Add User</button>
+            </div>
+            <div id="userGrid" class="user-grid">
+                <div style="text-align:center; width: 100%; grid-column: 1/-1; padding: 20px;">Loading users...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="withdrawalModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeWithdrawalModal()">&times;</span>
+            <h3 style="margin-bottom: 20px; color: var(--withdrawal-color);"><i class="fas fa-hand-holding-usd"></i> Process Withdrawal</h3>
+            <form id="withdrawalForm">
+                
+                <div class="form-group">
+                    <label>Select Month</label>
+                    <input type="month" id="wMonth" class="form-control" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>Total Received Amount</label>
+                    <input type="number" id="wReceived" class="form-control" readonly style="background: #f8f9fa;">
+                </div>
+
+                <div class="form-group">
+                    <label>Interest Rate</label>
+                    <input type="text" value="3%" class="form-control" readonly style="background: #f8f9fa;">
+                </div>
+
+                <div class="form-group">
+                    <label>Final Withdrawal Amount (Editable)</label>
+                    <input type="number" id="wFinalAmount" class="form-control" style="background: #fff; color: var(--success-color); font-weight: bold; font-size: 18px; border: 2px solid var(--success-color);">
+                </div>
+
+                <div class="form-group">
+                    <label>Interest Amount (Deduction)</label>
+                    <input type="number" id="wInterest" class="form-control" readonly style="background: #f8f9fa; color: var(--accent-color); font-weight: bold;">
+                </div>
+
+                <div class="form-group">
+                    <label>Net Withdrawal Amount (Final - Interest)</label>
+                    <input type="number" id="wNetPayable" class="form-control" readonly style="background: #34495e; color: #fff; font-weight: bold; font-size: 18px;">
+                </div>
+
+                <div class="form-group">
+                    <label>Withdraw To (Select User)</label>
+                    <select id="wUserSelect" class="form-control" required>
+                        <option value="">-- Select Admin/User --</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary" style="background-color: var(--withdrawal-color);">Confirm Withdrawal</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle" style="margin-bottom: 20px;">Add New User</h3>
+            <form id="userForm">
+                <input type="hidden" id="editUserId"> 
+                <div class="form-group">
+                    <label>Phone Number (Login ID)</label>
+                    <input type="tel" id="userPhone" class="form-control" placeholder="10 Digit Number" maxlength="10" required>
+                </div>
+                <div class="form-group">
+                    <label>User Name (Password)</label>
+                    <input type="text" id="userName" class="form-control" placeholder="Name (Min 6 chars)" required>
+                </div>
+                <div class="form-group">
+                    <label>Monthly Pay Amount</label>
+                    <input type="number" id="userAmount" class="form-control" placeholder="Amount (₹)" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="userRole" class="form-control">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" id="saveBtn" class="btn-primary">Save User</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="payModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closePayModal()">&times;</span>
+            <h3 style="margin-bottom: 20px; color: var(--success-color);"><i class="fas fa-receipt"></i> Record Payment</h3>
+            <form id="payForm">
+                <input type="hidden" id="payUserId">
+                
+                <div class="form-group">
+                    <label>User Name (ID)</label>
+                    <input type="text" id="payUserName" class="form-control" readonly style="background-color: #f1f1f1; color: #555;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Month</label>
+                    <input type="month" id="payMonth" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Payment Status</label>
+                    <select id="payStatus" class="form-control">
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Advance">Advance</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="payAmount" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn-primary" style="background-color: var(--success-color);">Confirm Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeHistoryModal()">&times;</span>
+            <h3 style="margin-bottom: 15px; color: var(--info-color);"><i class="fas fa-history"></i> Payment History</h3>
+            <p id="historyUserName" style="margin-bottom: 15px; color: #666; font-size: 14px;"></p>
+            <div style="overflow-y: auto; max-height: 300px;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr><td colspan="3">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, get, child, onValue, set, update, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyApYK_C_C8CRy8FpIO3tskc1SFl74ID01Y",
+            authDomain: "tirupathistore-244af.firebaseapp.com",
+            databaseURL: "https://tirupathistore-244af-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tirupathistore-244af",
+            storageBucket: "tirupathistore-244af.firebasestorage.app",
+            messagingSenderId: "153023171028",
+            appId: "1:153023171028:web:b18d29deccf70bcd906e41"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        
+        const loader = document.getElementById('loader');
+        const mainContent = document.getElementById('mainContent');
+
+        // Global Variables for Data Cache
+        let globalUsers = [];
+        let globalPayments = [];
+        let globalWithdrawals = []; // New global to store withdrawals
+        let currentReceivedTotal = 0; // For Withdrawal calculation
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                get(child(ref(db), `users/${user.uid}`)).then((snapshot) => {
+                    if (snapshot.exists() && snapshot.val().role === 'admin') {
+                        document.getElementById('adminPhoneDisplay').innerText = `Logged in as: ${snapshot.val().phone}`;
+                        loader.style.display = 'none';
+                        mainContent.style.display = 'block';
+                        initRealTimeListeners(); // Start Listeners
+                    } else {
+                        window.location.href = "user.html";
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        // --- REAL-TIME LISTENERS ---
+        function initRealTimeListeners() {
+            // Listen to Users
+            onValue(ref(db, 'users'), (snapshot) => {
+                if(snapshot.exists()) {
+                    globalUsers = Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] }));
+                } else {
+                    globalUsers = [];
+                }
+                updateViews();
+            });
+
+            // Listen to Payments
+            onValue(ref(db, 'payments'), (snapshot) => {
+                if(snapshot.exists()) {
+                    globalPayments = Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] }));
+                } else {
+                    globalPayments = [];
+                }
+                updateViews();
+            });
+
+            // Listen to Withdrawals (for history)
+            onValue(ref(db, 'withdrawals'), (snapshot) => {
+                if(snapshot.exists()) {
+                    globalWithdrawals = Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] }));
+                } else {
+                    globalWithdrawals = [];
+                }
+                updateViews();
+            });
+        }
+
+        function updateViews() {
+            renderUserGrid();
+            renderPaymentGrid();
+            updateDashboard();
+        }
+
+        // --- UPDATE DASHBOARD LOGIC (UPDATED WITH ACCUMULATED INTEREST) ---
+        function updateDashboard() {
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            let pendingCount = 0;
+            let pendingAmount = 0;
+            let totalPayments = 0; // Gross Inflow from Users
+
+            // 1. Calculate Inflow (Payments)
+            globalUsers.forEach(user => {
+                const payment = globalPayments.find(p => p.userId === user.id && p.month === currentMonth);
+                const status = payment ? payment.status : "Pending";
+                
+                if (status === "Paid" || status === "Advance") {
+                    if (payment && payment.amount) {
+                        totalPayments += Number(payment.amount);
+                    }
+                } else {
+                    pendingCount++;
+                    if (user.monthlyPay) {
+                        pendingAmount += Number(user.monthlyPay);
+                    }
+                }
+            });
+
+            // 2. Calculate Outflow (Withdrawals) & Accumulated Interest
+            let totalWithdrawn = 0;
+            let totalInterestCollected = 0;
+
+            globalWithdrawals.forEach(w => {
+                if (w.month === currentMonth) {
+                    // Subtract the Gross Withdrawal Amount
+                    totalWithdrawn += Number(w.withdrawnAmount || 0);
+                    // Add up the Interest Deducted
+                    totalInterestCollected += Number(w.interestAmount || 0);
+                }
+            });
+
+            // 3. Net Received Amount (Inflow - Outflow)
+            const netReceived = Math.max(0, totalPayments - totalWithdrawn);
+            
+            // Store for Withdrawal Modal
+            currentReceivedTotal = netReceived; 
+
+            document.getElementById('dashboardTotalUsers').innerText = globalUsers.length;
+            document.getElementById('dashboardPendingCount').innerText = pendingCount;
+            document.getElementById('dashboardPendingAmount').innerText = `₹${pendingAmount}`;
+            document.getElementById('dashboardReceivedAmount').innerText = `₹${netReceived}`;
+            
+            // UPDATED: Now showing total interest collected from withdrawals
+            document.getElementById('dashboardInterestAmount').innerText = `₹${totalInterestCollected}`;
+        }
+
+        // --- WITHDRAWAL LOGIC (UPDATED) ---
+        window.openWithdrawalModal = () => {
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            // 1. Calculations
+            const received = currentReceivedTotal;
+            
+            // Default Final Amount is now EQUAL to Total Received
+            const finalAmount = received; 
+            const interest = Math.floor(finalAmount * 0.03);
+            const netAmount = finalAmount - interest;
+
+            // 2. Populate Fields
+            document.getElementById('wMonth').value = currentMonth;
+            document.getElementById('wReceived').value = received;
+            document.getElementById('wInterest').value = interest;
+            document.getElementById('wFinalAmount').value = finalAmount;
+            document.getElementById('wNetPayable').value = netAmount;
+
+            // 3. Populate User Dropdown
+            const userSelect = document.getElementById('wUserSelect');
+            userSelect.innerHTML = '<option value="">-- Select Admin/User --</option>';
+            globalUsers.forEach(user => {
+                const opt = document.createElement('option');
+                opt.value = user.id;
+                opt.text = `${user.name} (${user.role})`;
+                userSelect.appendChild(opt);
+            });
+
+            document.getElementById('withdrawalModal').style.display = 'block';
+        };
+
+        // Event Listener for Manual Final Amount Edit
+        document.getElementById('wFinalAmount').addEventListener('input', function(e) {
+            const finalVal = parseFloat(e.target.value) || 0;
+            
+            // 1. Calculate Interest (3% of Input)
+            const newInterest = Math.floor(finalVal * 0.03);
+            document.getElementById('wInterest').value = newInterest;
+
+            // 2. Calculate Net Amount (Final - Interest)
+            const newNet = finalVal - newInterest;
+            document.getElementById('wNetPayable').value = newNet;
+        });
+
+        window.closeWithdrawalModal = () => { document.getElementById('withdrawalModal').style.display = 'none'; };
+
+        document.getElementById('withdrawalForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const month = document.getElementById('wMonth').value;
+            const received = document.getElementById('wReceived').value;
+            const interest = document.getElementById('wInterest').value;
+            const finalAmount = document.getElementById('wFinalAmount').value;
+            const netAmount = document.getElementById('wNetPayable').value;
+            const userId = document.getElementById('wUserSelect').value;
+
+            // Save to database (This triggers onValue listeners automatically)
+            push(ref(db, 'withdrawals'), {
+                month: month,
+                totalReceived: received,
+                interestAmount: interest,
+                withdrawnAmount: finalAmount,
+                netPayoutAmount: netAmount, 
+                withdrawnBy: userId,
+                timestamp: Date.now()
+            }).then(() => {
+                alert(`Withdrawal of ₹${finalAmount} (Net: ₹${netAmount}) Recorded Successfully!`);
+                window.closeWithdrawalModal();
+            }).catch(err => alert("Error: " + err.message));
+        });
+
+        // --- RENDER USERS TAB ---
+        function renderUserGrid() {
+            const gridContainer = document.getElementById('userGrid');
+            gridContainer.innerHTML = ""; 
+
+            if (globalUsers.length > 0) {
+                globalUsers.forEach(user => {
+                    const card = createCardHTML(user, false);
+                    gridContainer.appendChild(card);
+                });
+            } else {
+                gridContainer.innerHTML = "<div style='text-align:center; width: 100%; grid-column: 1/-1;'>No users found.</div>";
+            }
+        }
+
+        // --- RENDER PAYMENTS TAB ---
+        function renderPaymentGrid() {
+            const gridContainer = document.getElementById('paymentGrid');
+            gridContainer.innerHTML = ""; 
+
+            if (globalUsers.length > 0) {
+                const now = new Date();
+                const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+                globalUsers.forEach(user => {
+                    const payment = globalPayments.find(p => p.userId === user.id && p.month === currentMonth);
+                    const status = payment ? payment.status : "Pending";
+                    
+                    const card = createCardHTML(user, true, status, currentMonth);
+                    gridContainer.appendChild(card);
+                });
+            } else {
+                gridContainer.innerHTML = "<div style='text-align:center; width: 100%; grid-column: 1/-1;'>No users found.</div>";
+            }
+        }
+
+        function createCardHTML(user, isPayment, status = null, currentMonthLabel = "") {
+            const card = document.createElement('div');
+            card.className = 'user-card-item';
+            const roleBadge = user.role === 'admin' ? 'badge-admin' : 'badge-user';
+            const amount = user.monthlyPay ? `₹${user.monthlyPay}` : '-';
+            
+            let extraRows = '';
+            let actions = '';
+
+            if (isPayment) {
+                let statusClass = "status-pending";
+                if(status === "Paid") statusClass = "status-paid";
+                if(status === "Advance") statusClass = "status-advance";
+
+                extraRows = `
+                    <div class="uc-row">
+                        <strong>Status (${currentMonthLabel}):</strong> 
+                        <span class="status-badge ${statusClass}">${status}</span>
+                    </div>
+                `;
+
+                actions = `
+                    <div class="uc-actions center-actions">
+                        <button class="action-btn btn-pay" onclick="window.handlePay('${user.id}')"><i class="fas fa-money-bill-wave"></i> Pay</button>
+                        <button class="action-btn btn-history" onclick="window.handleHistory('${user.id}')"><i class="fas fa-history"></i> History</button>
+                    </div>
+                `;
+            } else {
+                actions = `
+                    <div class="uc-actions">
+                        <button class="action-btn btn-edit" onclick="window.editUser('${user.id}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="action-btn btn-delete" onclick="window.deleteUser('${user.id}')"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="uc-header">
+                    <div class="uc-name">${user.name}</div>
+                    <div class="uc-role ${roleBadge}">${user.role}</div>
+                </div>
+                <div class="uc-details">
+                    <div class="uc-row"><strong>Phone (ID):</strong> <span>${user.phone}</span></div>
+                    <div class="uc-row"><strong>Monthly Pay:</strong> <span style="color:#2ecc71; font-weight:600;">${amount}</span></div>
+                    ${extraRows}
+                </div>
+                ${actions}
+            `;
+            return card;
+        }
+
+        // --- HISTORY MODAL LOGIC ---
+        window.handleHistory = (uid) => {
+            const user = globalUsers.find(u => u.id === uid);
+            if (!user) return;
+
+            document.getElementById('historyUserName').innerText = `History for: ${user.name} (${user.phone})`;
+            
+            // 1. Fetch Standard Payments
+            const userPayments = globalPayments
+                .filter(p => p.userId === uid)
+                .map(p => ({
+                    month: p.month,
+                    status: p.status,
+                    amount: `₹${p.amount}`,
+                    type: 'Payment'
+                }));
+
+            // 2. Fetch Withdrawals (Only if looking at admin history, or logic can be adjusted to show who withdrew)
+            const userWithdrawals = globalWithdrawals
+                .filter(w => w.withdrawnBy === uid)
+                .map(w => {
+                    const netAmt = w.netPayoutAmount ? `₹${w.netPayoutAmount} (Net)` : `₹${w.withdrawnAmount}`;
+                    return {
+                        month: w.month,
+                        status: 'Withdrawal',
+                        amount: netAmt, 
+                        type: 'Withdrawal'
+                    };
+                });
+
+            // 3. Merge and Sort by Date (Descending)
+            const allHistory = [...userPayments, ...userWithdrawals].sort((a, b) => b.month.localeCompare(a.month));
+
+            const tableBody = document.getElementById('historyTableBody');
+            tableBody.innerHTML = "";
+
+            if (allHistory.length > 0) {
+                allHistory.forEach(record => {
+                    const row = document.createElement('tr');
+                    let statusColor = "#f39c12"; // Pending default
+                    let statusText = record.status;
+
+                    if(record.status === "Paid") { statusColor = "#2ecc71"; }
+                    else if(record.status === "Advance") { statusColor = "#34495e"; }
+                    else if(record.status === "Withdrawal") { 
+                        statusColor = "#e67e22"; 
+                        statusText = "Withdrawn";
+                    }
+
+                    row.innerHTML = `
+                        <td>${record.month}</td>
+                        <td><span style="color:${statusColor}; font-weight:600;">${statusText}</span></td>
+                        <td>${record.amount}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                tableBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No history found.</td></tr>";
+            }
+
+            document.getElementById('historyModal').style.display = 'block';
+        };
+
+        window.closeHistoryModal = () => { document.getElementById('historyModal').style.display = 'none'; };
+
+        // --- PAY MODAL LOGIC ---
+        window.handlePay = (uid) => {
+            const user = globalUsers.find(u => u.id === uid);
+            if(user) {
+                document.getElementById('payUserId').value = uid;
+                document.getElementById('payUserName').value = `${user.name} (${user.phone})`;
+                document.getElementById('payAmount').value = user.monthlyPay || 0;
+                
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const currentMonthString = `${year}-${month}`;
+                
+                document.getElementById('payMonth').value = currentMonthString;
+                document.getElementById('payStatus').value = 'Paid'; // Default
+
+                const monthInput = document.getElementById('payMonth');
+                monthInput.onchange = (e) => {
+                    if(e.target.value > currentMonthString) {
+                         document.getElementById('payStatus').value = 'Advance';
+                    } else {
+                         document.getElementById('payStatus').value = 'Paid';
+                    }
+                };
+
+                document.getElementById('payModal').style.display = 'block';
+            }
+        };
+
+        window.closePayModal = () => { document.getElementById('payModal').style.display = 'none'; };
+
+        document.getElementById('payForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const uid = document.getElementById('payUserId').value;
+            const month = document.getElementById('payMonth').value;
+            const status = document.getElementById('payStatus').value;
+            const amount = document.getElementById('payAmount').value;
+            
+            const existingPayment = globalPayments.find(p => p.userId === uid && p.month === month);
+            
+            if (existingPayment) {
+                update(ref(db, `payments/${existingPayment.id}`), {
+                    status: status,
+                    amount: amount,
+                    timestamp: Date.now()
+                }).then(() => {
+                    alert("Payment Status Updated!");
+                    window.closePayModal();
+                });
+            } else {
+                push(ref(db, 'payments'), {
+                    userId: uid,
+                    month: month,
+                    status: status,
+                    amount: amount,
+                    timestamp: Date.now()
+                }).then(() => {
+                    alert("Payment Recorded!");
+                    window.closePayModal();
+                });
+            }
+        });
+
+        // --- ADD/EDIT USER ---
+        window.openModal = (reset = true) => {
+            const modal = document.getElementById('userModal');
+            if(reset) {
+                document.getElementById('userForm').reset();
+                document.getElementById('editUserId').value = ""; 
+                document.getElementById('modalTitle').innerText = "Add New User";
+                document.getElementById('userPhone').disabled = false;
+            }
+            modal.style.display = "block";
+        };
+        window.closeModal = () => { document.getElementById('userModal').style.display = "none"; };
+
+        window.editUser = (uid) => {
+            const user = globalUsers.find(u => u.id === uid);
+            if(user) {
+                document.getElementById('userPhone').value = user.phone;
+                document.getElementById('userPhone').disabled = true;
+                document.getElementById('userName').value = user.name;
+                document.getElementById('userAmount').value = user.monthlyPay || "";
+                document.getElementById('userRole').value = user.role;
+                document.getElementById('editUserId').value = uid;
+                document.getElementById('modalTitle').innerText = "Edit User";
+                window.openModal(false);
+            }
+        };
+
+        window.deleteUser = (uid) => {
+            if(confirm("Delete this user?")) {
+                remove(ref(db, `users/${uid}`)).then(() => alert("User record deleted."));
+            }
+        };
+
+        document.getElementById('userForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const uid = document.getElementById('editUserId').value;
+            const phone = document.getElementById('userPhone').value;
+            const name = document.getElementById('userName').value;
+            const amount = document.getElementById('userAmount').value;
+            const role = document.getElementById('userRole').value;
+            const email = `${phone}@tirupathistore.com`;
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "Processing..."; btn.disabled = true;
+
+            if (uid) {
+                update(ref(db, `users/${uid}`), { name, monthlyPay: amount, role }).then(() => {
+                    alert("User updated!"); window.closeModal(); btn.innerText = "Save User"; btn.disabled = false;
+                });
+            } else {
+                const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+                const secondaryAuth = getAuth(secondaryApp);
+                createUserWithEmailAndPassword(secondaryAuth, email, name).then((cred) => {
+                    set(ref(db, `users/${cred.user.uid}`), { phone, name, monthlyPay: amount, role }).then(() => {
+                        signOut(secondaryAuth).then(() => { alert("User created!"); window.closeModal(); btn.innerText = "Save User"; btn.disabled = false; });
+                    });
+                }).catch(err => { alert(err.message); btn.innerText = "Save User"; btn.disabled = false; });
+            }
+        });
+
+        window.switchView = (viewName, element) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+            document.getElementById(`view-${viewName}`).classList.add('active-view');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            if(window.innerWidth <= 768) toggleSidebar();
+        };
+
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.querySelector('.overlay').classList.toggle('active');
+        };
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('userModal')) closeModal();
+            if (event.target == document.getElementById('payModal')) closePayModal();
+            if (event.target == document.getElementById('historyModal')) closeHistoryModal();
+            if (event.target == document.getElementById('withdrawalModal')) closeWithdrawalModal();
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
+    </script>
+</body>
+</html>

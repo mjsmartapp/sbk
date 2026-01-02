@@ -21,6 +21,8 @@
             --accent-warning: #facc15; /* Soft Yellow */
             --accent-danger: #f87171; /* Soft Red */
             --accent-purple: #c084fc; /* Soft Purple */
+            --accent-teal: #2dd4bf; /* Teal for Repaid */
+            --accent-rose: #fb7185; /* Rose for Due */
             --font-main: 'Outfit', sans-serif;
         }
 
@@ -45,7 +47,7 @@
         /* --- LAYOUT CONTAINER --- */
         .app-container {
             width: 100%;
-            max-width: 1200px; /* Wider for full screen feel */
+            max-width: 1200px;
             margin-top: 10px;
             animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             display: none;
@@ -119,7 +121,7 @@
         /* --- STATS GRID --- */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px;
         }
 
@@ -143,6 +145,8 @@
         .stat-card.orange .stat-icon-wrapper { background: rgba(250, 204, 21, 0.15); color: var(--accent-warning); }
         .stat-card.green .stat-icon-wrapper { background: rgba(74, 222, 128, 0.15); color: var(--accent-success); }
         .stat-card.purple .stat-icon-wrapper { background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); }
+        .stat-card.teal .stat-icon-wrapper { background: rgba(45, 212, 191, 0.15); color: var(--accent-teal); }
+        .stat-card.rose .stat-icon-wrapper { background: rgba(251, 113, 133, 0.15); color: var(--accent-rose); }
 
         .stat-icon-wrapper {
             width: 48px;
@@ -175,14 +179,15 @@
         .text-pending { color: var(--accent-warning); }
         .text-success { color: var(--accent-success); }
         .text-withdraw { color: var(--accent-purple); }
-        .text-advance { color: #94a3b8; }
+        .text-repaid { color: var(--accent-teal); }
+        .text-due { color: var(--accent-rose); }
 
         /* --- TABLE & FILTER SECTION --- */
         .table-panel {
             padding: 0;
             display: flex;
             flex-direction: column;
-            height: 100%; /* Ensure full height usage if possible */
+            height: 100%;
         }
         
         .table-header-row {
@@ -255,14 +260,14 @@
         .table-container {
             width: 100%;
             overflow-x: auto;
-            max-height: 600px; /* Limits height on huge screens */
+            max-height: 600px;
             overflow-y: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            white-space: nowrap; /* Prevents text wrap on small screens */
+            white-space: nowrap;
         }
 
         th {
@@ -273,7 +278,7 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: rgba(30, 41, 59, 0.5); /* Sticky header bg */
+            background: rgba(30, 41, 59, 0.5);
             position: sticky;
             top: 0;
             z-index: 10;
@@ -308,6 +313,7 @@
         .pill-pending { background: rgba(250, 204, 21, 0.15); color: var(--accent-warning); border: 1px solid rgba(250, 204, 21, 0.2); }
         .pill-advance { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); }
         .pill-withdraw { background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.2); }
+        .pill-repaid { background: rgba(45, 212, 191, 0.15); color: var(--accent-teal); border: 1px solid rgba(45, 212, 191, 0.2); }
 
         .date-subtext {
             font-size: 11px;
@@ -354,9 +360,7 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        .popup-overlay.active {
-            opacity: 1;
-        }
+        .popup-overlay.active { opacity: 1; }
 
         .popup-content {
             background: #1e293b;
@@ -370,9 +374,7 @@
             transform: scale(0.9);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .popup-overlay.active .popup-content {
-            transform: scale(1);
-        }
+        .popup-overlay.active .popup-content { transform: scale(1); }
 
         .popup-icon {
             width: 60px; height: 60px;
@@ -438,25 +440,17 @@
         @media (max-width: 768px) {
             body { padding: 10px; align-items: flex-start; }
             .app-container { gap: 16px; margin-top: 5px; }
-            
-            /* Header */
             .header-panel { padding: 15px 20px; flex-direction: column; gap: 15px; align-items: flex-start; }
             .logout-btn { width: 100%; justify-content: center; }
-            
-            /* Stats */
             .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .stat-card { padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; }
             .stat-icon-wrapper { margin-bottom: 8px; width: 40px; height: 40px; font-size: 18px; }
             .stat-value { font-size: 18px; }
             .stat-label { font-size: 11px; }
-
-            /* Table Header & Filters */
             .table-header-row { padding: 15px; flex-direction: column; align-items: stretch; gap: 12px; }
             .filter-group { flex-direction: row; gap: 8px; }
-            .search-wrapper { width: 100%; flex-basis: 100%; } /* Search full width */
+            .search-wrapper { width: 100%; flex-basis: 100%; }
             .custom-select { flex-grow: 1; }
-
-            /* Compact Table Cells */
             th, td { padding: 10px 12px; font-size: 13px; }
             .status-pill { padding: 3px 8px; font-size: 10px; min-width: 70px; }
             .amount-cell { font-size: 14px; }
@@ -516,6 +510,22 @@
                 </div>
             </div>
 
+            <div class="stat-card teal">
+                <div class="stat-icon-wrapper"><i class="fas fa-hand-holding-heart"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Repaid Total</div>
+                    <div class="stat-value text-repaid" id="totalRepaid">₹0</div>
+                </div>
+            </div>
+
+            <div class="stat-card rose">
+                <div class="stat-icon-wrapper"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="stat-content">
+                    <div class="stat-label">Repay Due Amount</div>
+                    <div class="stat-value text-due" id="repayDueAmount">₹0</div>
+                </div>
+            </div>
+
         </div>
 
         <div class="glass-panel table-panel">
@@ -537,6 +547,7 @@
                         <option value="Pending">Pending</option>
                         <option value="Advance">Advance</option>
                         <option value="Withdrawal">Withdraw</option>
+                        <option value="Repaid">Repaid</option>
                     </select>
 
                     <input type="month" id="monthFilter" class="custom-select" style="color-scheme: dark;">
@@ -571,8 +582,7 @@
             <div id="popupIcon" class="popup-icon"></div>
             <h3 id="popupTitle" class="popup-title"></h3>
             <p id="popupMessage" class="popup-msg"></p>
-            <div id="popupActions" class="popup-actions">
-                </div>
+            <div id="popupActions" class="popup-actions"></div>
         </div>
     </div>
 
@@ -599,14 +609,12 @@
         const loader = document.getElementById('loader');
         const dashboard = document.getElementById('dashboard');
         
-        // Popup Elements
         const popupOverlay = document.getElementById('customPopup');
         const popupIcon = document.getElementById('popupIcon');
         const popupTitle = document.getElementById('popupTitle');
         const popupMessage = document.getElementById('popupMessage');
         const popupActions = document.getElementById('popupActions');
 
-        // Data Store
         let myPayments = [];
         let myWithdrawals = [];
         let combinedHistory = []; 
@@ -620,7 +628,6 @@
         });
 
         function initUserDashboard(uid) {
-            // 1. Fetch User Profile
             onValue(ref(db, `users/${uid}`), (snapshot) => {
                 if (snapshot.exists()) {
                     const userData = snapshot.val();
@@ -633,7 +640,6 @@
                 }
             });
 
-            // 2. Fetch Payments
             onValue(ref(db, 'payments'), (snapshot) => {
                 const all = snapshot.val() || {};
                 myPayments = [];
@@ -645,7 +651,6 @@
                 refreshDataAndTable();
             });
 
-            // 3. Fetch Withdrawals
             onValue(ref(db, 'withdrawals'), (snapshot) => {
                 const all = snapshot.val() || {};
                 myWithdrawals = [];
@@ -659,29 +664,39 @@
         }
 
         function refreshDataAndTable() {
-            // Update Totals
             let totalPaid = 0;
             let totalWithdrawn = 0;
+            let totalRepaid = 0;
+            let totalWithdrawalDebt = 0;
 
             myPayments.forEach(p => {
                 if (p.status === 'Paid' || p.status === 'Advance') {
                     totalPaid += Number(p.amount || 0);
                 }
+                if (p.status === 'Repaid') {
+                    totalRepaid += Number(p.amount || 0);
+                }
             });
+            
             myWithdrawals.forEach(w => {
                 totalWithdrawn += Number(w.withdrawnAmount || 0);
+                // Calculation for due balance: usually based on the original repay total set by admin
+                totalWithdrawalDebt += Number(w.repayTotal || 0);
             });
 
             document.getElementById('totalPaid').innerText = `₹${totalPaid}`;
             document.getElementById('totalWithdrawn').innerText = `₹${totalWithdrawn}`;
+            document.getElementById('totalRepaid').innerText = `₹${totalRepaid}`;
+            
+            // Display total remaining due amount
+            document.getElementById('repayDueAmount').innerText = `₹${totalWithdrawalDebt}`;
             
             updateCurrentMonthStatus();
 
-            // Prepare Combined Data for Filtering
             const paymentRows = myPayments.map(p => ({
                 month: p.month,
                 type: 'Payment',
-                status: p.status, // Paid, Pending, Advance
+                status: p.status, 
                 amount: p.amount,
                 timestamp: p.timestamp
             }));
@@ -694,20 +709,16 @@
                 timestamp: w.timestamp
             }));
 
-            // Merge and Sort
             combinedHistory = [...paymentRows, ...withdrawalRows].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-            // Initial Render
             applyFilters();
         }
 
         function updateCurrentMonthStatus() {
             const now = new Date();
             const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            const currentPayment = myPayments.find(p => p.month === currentMonthKey);
+            const currentPayment = myPayments.find(p => p.month === currentMonthKey && p.status !== 'Repaid');
             const statusEl = document.getElementById('currentStatus');
             
-            // Remove previous color classes
             statusEl.classList.remove('text-success', 'text-pending', 'text-advance');
 
             if (currentPayment) {
@@ -725,7 +736,6 @@
             }
         }
 
-        // --- FILTER LOGIC ---
         function applyFilters() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
@@ -755,13 +765,13 @@
 
             data.forEach(item => {
                 const row = document.createElement('tr');
-                
                 let pillClass = "pill-pending";
                 let displayStatus = item.status;
 
                 if (item.type === 'Payment') {
                     if(item.status === 'Paid') pillClass = "pill-paid";
                     if(item.status === 'Advance') pillClass = "pill-advance";
+                    if(item.status === 'Repaid') pillClass = "pill-repaid";
                 } else {
                     pillClass = "pill-withdraw";
                     displayStatus = "Withdraw";
@@ -782,12 +792,11 @@
             });
         }
 
-        // --- CUSTOM POPUP SYSTEM ---
         function showCustomPopup(type, title, message, onConfirmCallback) {
             popupTitle.innerText = title;
             popupMessage.innerText = message;
             popupActions.innerHTML = '';
-            popupIcon.className = 'popup-icon'; // reset
+            popupIcon.className = 'popup-icon';
 
             if (type === 'confirm') {
                 popupIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
@@ -822,25 +831,18 @@
             }
 
             popupOverlay.style.display = 'flex';
-            // Slight delay to allow display flex to apply before opacity transition
-            setTimeout(() => {
-                popupOverlay.classList.add('active');
-            }, 10);
+            setTimeout(() => { popupOverlay.classList.add('active'); }, 10);
         }
 
         function closePopup() {
             popupOverlay.classList.remove('active');
-            setTimeout(() => {
-                popupOverlay.style.display = 'none';
-            }, 300); // match transition duration
+            setTimeout(() => { popupOverlay.style.display = 'none'; }, 300);
         }
 
-        // --- EVENT LISTENERS ---
         document.getElementById('searchInput').addEventListener('input', applyFilters);
         document.getElementById('statusFilter').addEventListener('change', applyFilters);
         document.getElementById('monthFilter').addEventListener('input', applyFilters);
 
-        // Updated Logout Logic using Custom Popup
         document.getElementById('logoutBtn').addEventListener('click', () => {
             showCustomPopup('confirm', 'Confirm Logout', 'Are you sure you want to log out of your account?', () => {
                 loader.style.display = 'flex';
@@ -852,7 +854,6 @@
                 });
             });
         });
-
     </script>
 </body>
 </html>

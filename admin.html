@@ -24,6 +24,7 @@
             --advance-color: #34495e;
             --withdrawal-color: #e67e22;
             --cash-color: #8e44ad;
+            --repay-color: #16a085;
         }
 
         body {
@@ -205,7 +206,7 @@
         .uc-row strong { color: #888; font-weight: 500; }
 
         .uc-actions { border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: flex-end; gap: 10px; }
-        .uc-actions.center-actions { justify-content: center; }
+        .uc-actions.center-actions { justify-content: center; flex-wrap: wrap; }
 
         /* --- STATUS BADGES --- */
         .status-badge { padding: 4px 8px; border-radius: 4px; color: white; font-weight: 600; font-size: 12px; }
@@ -213,6 +214,7 @@
         .status-pending { background-color: var(--warning-color); }
         .status-advance { background-color: var(--advance-color); }
         .status-withdrawal { background-color: var(--withdrawal-color); }
+        .status-repaid { background-color: var(--repay-color); }
 
         /* --- MODAL (POPUP) --- */
         .modal {
@@ -228,7 +230,7 @@
             margin: 5% auto; 
             padding: 25px; 
             border: 1px solid #888; 
-            width: 90%; max-width: 500px;
+            width: 95%; max-width: 600px;
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             position: relative;
@@ -242,7 +244,7 @@
         .history-table th { background-color: #f8f9fa; color: #666; font-weight: 600; }
         .history-table td { color: #333; }
 
-        /* --- DUE USER LIST (NEW) --- */
+        /* --- DUE USER LIST --- */
         .due-user-list {
             margin-top: 10px;
         }
@@ -283,10 +285,11 @@
         .btn-add:hover { background: #27ae60; }
 
         /* --- ACTION BUTTONS --- */
-        .action-btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; color: white; transition: 0.3s; }
+        .action-btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; color: white; transition: 0.3s; margin-bottom: 5px; }
         .btn-edit { background-color: var(--warning-color); }
         .btn-delete { background-color: var(--accent-color); }
         .btn-pay { background-color: var(--success-color); }
+        .btn-repay { background-color: var(--repay-color); }
         .btn-history { background-color: var(--info-color); }
 
         /* BADGES */
@@ -430,22 +433,28 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Interest Rate</label>
+                    <label>Interest Rate (per month)</label>
                     <input type="text" value="3%" class="form-control" readonly style="background: #f8f9fa;">
                 </div>
 
                 <div class="form-group">
                     <label>Final Withdrawal Amount (Editable)</label>
                     <input type="number" id="wFinalAmount" class="form-control" style="background: #fff; color: var(--success-color); font-weight: bold; font-size: 18px; border: 2px solid var(--success-color);">
+                    <small id="wAmountError" style="color: var(--accent-color); display: none; margin-top: 5px; font-weight: 500;">Amount cannot exceed available cash!</small>
                 </div>
 
                 <div class="form-group">
-                    <label>Interest Amount (Deduction)</label>
+                    <label>Repayment Duration (Months)</label>
+                    <input type="number" id="wRepayDuration" class="form-control" placeholder="e.g. 10" style="border: 1px solid var(--withdrawal-color);" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Total Interest Deduction ($Duration \times 3\% \times Amount$)</label>
                     <input type="number" id="wInterest" class="form-control" readonly style="background: #f8f9fa; color: var(--accent-color); font-weight: bold;">
                 </div>
 
                 <div class="form-group">
-                    <label>Net Withdrawal Amount (Final - Interest)</label>
+                    <label>Net Payout Amount (Final Amount - Interest)</label>
                     <input type="number" id="wNetPayable" class="form-control" readonly style="background: #34495e; color: #fff; font-weight: bold; font-size: 18px;">
                 </div>
 
@@ -456,7 +465,11 @@
                     </select>
                 </div>
 
-                <button type="submit" class="btn-primary" style="background-color: var(--withdrawal-color);">Confirm Withdrawal</button>
+                <div class="form-group">
+                    <label>Repayment Amount (Total)</label>
+                    <input type="number" id="wRepayTotal" class="form-control" placeholder="Total Repay Amount" style="border: 1px solid var(--withdrawal-color);">
+                </div>
+                <button type="submit" id="confirmWithdrawBtn" class="btn-primary" style="background-color: var(--withdrawal-color);">Confirm Withdrawal</button>
             </form>
         </div>
     </div>
@@ -464,17 +477,19 @@
     <div id="receivedHistoryModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeReceivedHistoryModal()">&times;</span>
-            <h3 style="margin-bottom: 15px; color: #2ecc71;"><i class="fas fa-chart-line"></i> All Month Received History</h3>
-            <div style="overflow-y: auto; max-height: 300px;">
+            <h3 style="margin-bottom: 15px; color: #2ecc71;"><i class="fas fa-chart-line"></i> Transaction History (CR/DR)</h3>
+            <div style="overflow-y: auto; max-height: 400px;">
                 <table class="history-table">
                     <thead>
                         <tr>
                             <th>Month</th>
-                            <th>Total Received</th>
+                            <th>Type</th>
+                            <th>Credit (CR)</th>
+                            <th>Debit (DR)</th>
                         </tr>
                     </thead>
                     <tbody id="receivedHistoryTableBody">
-                        <tr><td colspan="2">Loading...</td></tr>
+                        <tr><td colspan="4">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -547,6 +562,44 @@
         </div>
     </div>
 
+    <div id="repayModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeRepayModal()">&times;</span>
+            <h3 style="margin-bottom: 20px; color: var(--repay-color);"><i class="fas fa-hand-holding-heart"></i> Record Loan Repayment</h3>
+            <form id="repayForm">
+                <input type="hidden" id="repayUserId">
+                <input type="hidden" id="repayWithdrawalId">
+                
+                <div class="form-group">
+                    <label>User Name (ID)</label>
+                    <input type="text" id="repayUserName" class="form-control" readonly style="background-color: #f1f1f1; color: #555;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Due Repay Amount (Non-Editable)</label>
+                    <input type="number" id="repayDueAmount" class="form-control" readonly style="background-color: #f8f9fa; font-weight: bold; color: var(--accent-color);">
+                </div>
+
+                <div class="form-group">
+                    <label>Repayment Month</label>
+                    <input type="month" id="repayMonth" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Repayment Amount (₹)</label>
+                    <input type="number" id="repayAmount" class="form-control" required placeholder="Amount being returned">
+                </div>
+
+                <div class="form-group">
+                    <label>Balance (Remaining Loan Amount)</label>
+                    <input type="number" id="repayBalance" class="form-control" readonly style="background-color: #2c3e50; color: #fff; font-weight: bold;">
+                </div>
+
+                <button type="submit" class="btn-primary" style="background-color: var(--repay-color);">Confirm Repayment</button>
+            </form>
+        </div>
+    </div>
+
     <div id="historyModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeHistoryModal()">&times;</span>
@@ -594,18 +647,17 @@
         // Global Variables for Data Cache
         let globalUsers = [];
         let globalPayments = [];
-        let globalWithdrawals = []; // New global to store withdrawals
-        let currentReceivedTotal = 0; // For Withdrawal calculation
-        let currentCashInHand = 0; // NEW: Stores Calculated Cash in Hand
+        let globalWithdrawals = []; 
+        let currentReceivedTotal = 0; 
+        let currentCashInHand = 0; 
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 get(child(ref(db), `users/${user.uid}`)).then((snapshot) => {
                     if (snapshot.exists() && snapshot.val().role === 'admin') {
-                        // REMOVED: Logged in status display update logic as element was removed
                         loader.style.display = 'none';
                         mainContent.style.display = 'block';
-                        initRealTimeListeners(); // Start Listeners
+                        initRealTimeListeners(); 
                     } else {
                         window.location.href = "user.html";
                     }
@@ -617,7 +669,6 @@
 
         // --- REAL-TIME LISTENERS ---
         function initRealTimeListeners() {
-            // Listen to Users
             onValue(ref(db, 'users'), (snapshot) => {
                 if(snapshot.exists()) {
                     globalUsers = Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] }));
@@ -627,7 +678,6 @@
                 updateViews();
             });
 
-            // Listen to Payments
             onValue(ref(db, 'payments'), (snapshot) => {
                 if(snapshot.exists()) {
                     globalPayments = Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] }));
@@ -637,7 +687,6 @@
                 updateViews();
             });
 
-            // Listen to Withdrawals (for history)
             onValue(ref(db, 'withdrawals'), (snapshot) => {
                 if(snapshot.exists()) {
                     globalWithdrawals = Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] }));
@@ -654,42 +703,34 @@
             updateDashboard();
         }
 
-        // --- UPDATE DASHBOARD LOGIC (UPDATED WITH PENDING USER LIST & PAY BUTTON) ---
+        // --- UPDATE DASHBOARD LOGIC ---
         function updateDashboard() {
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             
-            // Monthly Variables
             let monthlyPendingCount = 0;
             let monthlyPendingAmount = 0;
             let monthlyPayments = 0;
             let monthlyWithdrawn = 0;
             let monthlyInterest = 0;
 
-            // All-Time Variables (For Cash in Hand)
             let allTimePayments = 0;
             let allTimeWithdrawn = 0;
             let allTimeInterest = 0;
 
-            // Array to store pending users
             let pendingUsersList = [];
 
-            // 1. Calculate All-Time Payments & Monthly Stats
             globalPayments.forEach(p => {
-                if(p.status === 'Paid' || p.status === 'Advance') {
-                    // All Time Accumulation
+                if(p.status === 'Paid' || p.status === 'Advance' || p.status === 'Repaid') {
                     allTimePayments += Number(p.amount || 0);
-                    
-                    // Monthly Accumulation (Logic integrated here or separately)
                     if (p.month === currentMonth) {
                          monthlyPayments += Number(p.amount || 0);
                     }
                 }
             });
 
-            // 2. Calculate Pending (User Loop)
             globalUsers.forEach(user => {
-                const payment = globalPayments.find(p => p.userId === user.id && p.month === currentMonth);
+                const payment = globalPayments.find(p => p.userId === user.id && p.month === currentMonth && p.status !== 'Repaid');
                 const status = payment ? payment.status : "Pending";
                 
                 if (status !== "Paid" && status !== "Advance") {
@@ -697,7 +738,6 @@
                      const due = Number(user.monthlyPay || 0);
                      if (due > 0) {
                          monthlyPendingAmount += due;
-                         // Add to Pending List (With ID for Pay Button)
                          pendingUsersList.push({
                              id: user.id,
                              name: user.name,
@@ -708,39 +748,28 @@
                 }
             });
 
-            // 3. Calculate Withdrawals (All Time & Monthly)
             globalWithdrawals.forEach(w => {
-                // All Time
                 allTimeWithdrawn += Number(w.withdrawnAmount || 0);
                 allTimeInterest += Number(w.interestAmount || 0);
 
-                // Monthly
                 if (w.month === currentMonth) {
                     monthlyWithdrawn += Number(w.withdrawnAmount || 0);
                     monthlyInterest += Number(w.interestAmount || 0);
                 }
             });
 
-            // 4. Monthly Net Received (Inflow - Outflow)
-            const monthlyNetReceived = Math.max(0, monthlyPayments - monthlyWithdrawn);
-            
-            // 5. Cash in Hand Calculation (All Time)
             const allTimeNetReceived = Math.max(0, allTimePayments - allTimeWithdrawn);
             const cashInHand = allTimeNetReceived + allTimeInterest;
 
-            // Store for Withdrawal Modal
             currentCashInHand = cashInHand; 
-            currentReceivedTotal = monthlyNetReceived; 
 
-            // DOM Updates
             document.getElementById('dashboardTotalUsers').innerText = globalUsers.length;
             document.getElementById('dashboardPendingCount').innerText = monthlyPendingCount;
             document.getElementById('dashboardPendingAmount').innerText = `₹${monthlyPendingAmount}`;
-            document.getElementById('dashboardReceivedAmount').innerText = `₹${monthlyNetReceived}`;
+            document.getElementById('dashboardReceivedAmount').innerText = `₹${monthlyPayments}`; // Current month payments
             document.getElementById('dashboardInterestAmount').innerText = `₹${monthlyInterest}`;
             document.getElementById('dashboardCashInHand').innerText = `₹${cashInHand}`;
 
-            // UPDATE: Render Pending Users List with Pay Button
             const listContainer = document.getElementById('dueUsersList');
             listContainer.innerHTML = "";
 
@@ -765,29 +794,49 @@
             }
         }
 
-        // --- WITHDRAWAL LOGIC (UPDATED to use CASH IN HAND) ---
+        // --- WITHDRAWAL LOGIC ---
+        function recalculateWithdrawalValues() {
+            const available = parseFloat(document.getElementById('wReceived').value) || 0;
+            const finalAmount = parseFloat(document.getElementById('wFinalAmount').value) || 0;
+            const duration = parseFloat(document.getElementById('wRepayDuration').value) || 0;
+            const errorLabel = document.getElementById('wAmountError');
+            const submitBtn = document.getElementById('confirmWithdrawBtn');
+
+            if (finalAmount > available) {
+                errorLabel.style.display = 'block';
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+            } else {
+                errorLabel.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+            }
+
+            const totalInterest = Math.floor(finalAmount * 0.03 * duration);
+            document.getElementById('wInterest').value = totalInterest;
+
+            const netAmount = finalAmount - totalInterest;
+            document.getElementById('wNetPayable').value = netAmount;
+
+            document.getElementById('wRepayTotal').value = finalAmount;
+        }
+
         window.openWithdrawalModal = () => {
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            
-            // 1. Calculations - Use Cash in Hand now
             const available = currentCashInHand;
             
-            const finalAmount = available; 
-            const interest = Math.floor(finalAmount * 0.03);
-            const netAmount = finalAmount - interest;
-
-            // 2. Populate Fields
             document.getElementById('wMonth').value = currentMonth;
-            
-            // Using Available Cash in Hand as the input base
             document.getElementById('wReceived').value = available; 
+            document.getElementById('wFinalAmount').value = available;
+            document.getElementById('wRepayDuration').value = "";
+            document.getElementById('wInterest').value = 0;
+            document.getElementById('wNetPayable').value = available;
+            document.getElementById('wRepayTotal').value = available;
             
-            document.getElementById('wInterest').value = interest;
-            document.getElementById('wFinalAmount').value = finalAmount;
-            document.getElementById('wNetPayable').value = netAmount;
+            document.getElementById('wAmountError').style.display = 'none';
+            document.getElementById('confirmWithdrawBtn').disabled = false;
 
-            // 3. Populate User Dropdown
             const userSelect = document.getElementById('wUserSelect');
             userSelect.innerHTML = '<option value="">-- Select Admin/User --</option>';
             globalUsers.forEach(user => {
@@ -800,98 +849,106 @@
             document.getElementById('withdrawalModal').style.display = 'block';
         };
 
-        // Event Listener for Manual Final Amount Edit
-        document.getElementById('wFinalAmount').addEventListener('input', function(e) {
-            const finalVal = parseFloat(e.target.value) || 0;
-            
-            // 1. Calculate Interest (3% of Input)
-            const newInterest = Math.floor(finalVal * 0.03);
-            document.getElementById('wInterest').value = newInterest;
-
-            // 2. Calculate Net Amount (Final - Interest)
-            const newNet = finalVal - newInterest;
-            document.getElementById('wNetPayable').value = newNet;
-        });
+        document.getElementById('wFinalAmount').addEventListener('input', recalculateWithdrawalValues);
+        document.getElementById('wRepayDuration').addEventListener('input', recalculateWithdrawalValues);
 
         window.closeWithdrawalModal = () => { document.getElementById('withdrawalModal').style.display = 'none'; };
 
         document.getElementById('withdrawalForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const month = document.getElementById('wMonth').value;
-            const received = document.getElementById('wReceived').value; // Hidden accumulated value for record
-            const interest = document.getElementById('wInterest').value;
-            const finalAmount = document.getElementById('wFinalAmount').value;
-            const netAmount = document.getElementById('wNetPayable').value;
-            const userId = document.getElementById('wUserSelect').value;
+            const available = parseFloat(document.getElementById('wReceived').value) || 0;
+            const finalAmount = parseFloat(document.getElementById('wFinalAmount').value) || 0;
+            const duration = document.getElementById('wRepayDuration').value;
 
-            // Save to database (This triggers onValue listeners automatically)
+            if (finalAmount > available) {
+                alert("Withdrawal amount cannot exceed available cash!");
+                return;
+            }
+
+            if (!duration || duration <= 0) {
+                alert("Please enter a valid repayment duration.");
+                return;
+            }
+
             push(ref(db, 'withdrawals'), {
-                month: month,
-                totalReceived: received, // Storing Cash in Hand snapshot here
-                interestAmount: interest,
+                month: document.getElementById('wMonth').value,
+                totalReceived: document.getElementById('wReceived').value, 
+                interestAmount: document.getElementById('wInterest').value,
                 withdrawnAmount: finalAmount,
-                netPayoutAmount: netAmount, 
-                withdrawnBy: userId,
+                netPayoutAmount: document.getElementById('wNetPayable').value, 
+                withdrawnBy: document.getElementById('wUserSelect').value,
+                repayDuration: duration, 
+                repayTotal: document.getElementById('wRepayTotal').value,       
                 timestamp: Date.now()
             }).then(() => {
-                alert(`Withdrawal of ₹${finalAmount} (Net: ₹${netAmount}) Recorded Successfully!`);
+                alert(`Withdrawal of ₹${finalAmount} Recorded Successfully!`);
                 window.closeWithdrawalModal();
             }).catch(err => alert("Error: " + err.message));
         });
 
-        // --- NEW: RECEIVED HISTORY LOGIC ---
         window.openReceivedHistoryModal = () => {
-            // 1. Group Payments by Month
-            const monthlyTotals = {};
-            
+            const transactions = [];
+
+            // 1. Process Payments (Monthly & Repayments) as CR
             globalPayments.forEach(p => {
-                if(p.status === 'Paid' || p.status === 'Advance') {
-                    const m = p.month;
-                    const amt = Number(p.amount) || 0;
-                    if(!monthlyTotals[m]) monthlyTotals[m] = 0;
-                    monthlyTotals[m] += amt;
+                if(p.status === 'Paid' || p.status === 'Advance' || p.status === 'Repaid') {
+                    transactions.push({
+                        month: p.month,
+                        type: p.status === 'Repaid' ? 'Repay' : 'Monthly Pay',
+                        cr: Number(p.amount) || 0,
+                        dr: 0,
+                        timestamp: p.timestamp || 0
+                    });
                 }
             });
 
-            // 2. Sort Months (Descending)
-            const sortedMonths = Object.keys(monthlyTotals).sort().reverse();
+            // 2. Process Withdrawals as DR
+            globalWithdrawals.forEach(w => {
+                transactions.push({
+                    month: w.month,
+                    type: 'Withdrawal',
+                    cr: 0,
+                    dr: Number(w.withdrawnAmount) || 0,
+                    timestamp: w.timestamp || 0
+                });
+            });
 
-            // 3. Render Table
+            // Sort by timestamp newest first
+            transactions.sort((a, b) => b.timestamp - a.timestamp);
+
             const tableBody = document.getElementById('receivedHistoryTableBody');
             tableBody.innerHTML = "";
 
-            if (sortedMonths.length > 0) {
-                sortedMonths.forEach(month => {
-                    const total = monthlyTotals[month];
+            if (transactions.length > 0) {
+                transactions.forEach(t => {
                     const row = document.createElement('tr');
+                    let typeColor = "#333";
+                    if(t.type === 'Withdrawal') typeColor = "var(--withdrawal-color)";
+                    if(t.type === 'Repay') typeColor = "var(--repay-color)";
+                    if(t.type === 'Monthly Pay') typeColor = "var(--success-color)";
+
                     row.innerHTML = `
-                        <td>${month}</td>
-                        <td><span style="color:#2ecc71; font-weight:600;">₹${total}</span></td>
+                        <td>${t.month}</td>
+                        <td style="color:${typeColor}; font-weight:500;">${t.type}</td>
+                        <td><span style="color:#2ecc71; font-weight:600;">${t.cr > 0 ? '₹' + t.cr : '-'}</span></td>
+                        <td><span style="color:#e74c3c; font-weight:600;">${t.dr > 0 ? '₹' + t.dr : '-'}</span></td>
                     `;
                     tableBody.appendChild(row);
                 });
             } else {
-                tableBody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>No received payments found.</td></tr>";
+                tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No transactions found.</td></tr>";
             }
-
             document.getElementById('receivedHistoryModal').style.display = 'block';
         };
 
-        window.closeReceivedHistoryModal = () => {
-            document.getElementById('receivedHistoryModal').style.display = 'none';
-        };
+        window.closeReceivedHistoryModal = () => { document.getElementById('receivedHistoryModal').style.display = 'none'; };
 
         // --- RENDER USERS TAB ---
         function renderUserGrid() {
             const gridContainer = document.getElementById('userGrid');
             gridContainer.innerHTML = ""; 
-
             if (globalUsers.length > 0) {
-                globalUsers.forEach(user => {
-                    const card = createCardHTML(user, false);
-                    gridContainer.appendChild(card);
-                });
+                globalUsers.forEach(user => { gridContainer.appendChild(createCardHTML(user, false)); });
             } else {
                 gridContainer.innerHTML = "<div style='text-align:center; width: 100%; grid-column: 1/-1;'>No users found.</div>";
             }
@@ -901,29 +958,28 @@
         function renderPaymentGrid() {
             const gridContainer = document.getElementById('paymentGrid');
             gridContainer.innerHTML = ""; 
-
             if (globalUsers.length > 0) {
                 const now = new Date();
                 const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
                 globalUsers.forEach(user => {
-                    const payment = globalPayments.find(p => p.userId === user.id && p.month === currentMonth);
+                    const payment = globalPayments.find(p => p.userId === user.id && p.month === currentMonth && p.status !== 'Repaid');
                     const status = payment ? payment.status : "Pending";
-                    
-                    const card = createCardHTML(user, true, status, currentMonth);
-                    gridContainer.appendChild(card);
+                    // Find all withdrawals for this user where there is still a balance to repay
+                    const userWithdrawals = globalWithdrawals.filter(w => w.withdrawnBy === user.id && Number(w.repayTotal) > 0);
+                    userWithdrawals.sort((a,b) => b.timestamp - a.timestamp);
+                    const activeWithdrawal = userWithdrawals.length > 0 ? userWithdrawals[0] : null;
+                    gridContainer.appendChild(createCardHTML(user, true, status, currentMonth, activeWithdrawal));
                 });
             } else {
                 gridContainer.innerHTML = "<div style='text-align:center; width: 100%; grid-column: 1/-1;'>No users found.</div>";
             }
         }
 
-        function createCardHTML(user, isPayment, status = null, currentMonthLabel = "") {
+        function createCardHTML(user, isPayment, status = null, currentMonthLabel = "", activeWithdrawal = null) {
             const card = document.createElement('div');
             card.className = 'user-card-item';
             const roleBadge = user.role === 'admin' ? 'badge-admin' : 'badge-user';
             const amount = user.monthlyPay ? `₹${user.monthlyPay}` : '-';
-            
             let extraRows = '';
             let actions = '';
 
@@ -931,17 +987,20 @@
                 let statusClass = "status-pending";
                 if(status === "Paid") statusClass = "status-paid";
                 if(status === "Advance") statusClass = "status-advance";
+                let repayInfo = "";
+                let repayButton = "";
 
-                extraRows = `
-                    <div class="uc-row">
-                        <strong>Status (${currentMonthLabel}):</strong> 
-                        <span class="status-badge ${statusClass}">${status}</span>
-                    </div>
-                `;
+                // CHECK IF USER HAS A LOAN TO SHOW REPAY BUTTON
+                if (activeWithdrawal) {
+                    repayInfo = `<div class="uc-row"><strong>Loan Repay:</strong> <span style="color:var(--withdrawal-color); font-weight:600;">₹${activeWithdrawal.repayTotal} (${activeWithdrawal.repayDuration} M)</span></div>`;
+                    repayButton = `<button class="action-btn btn-repay" onclick="window.handleRepay('${user.id}', ${activeWithdrawal.repayTotal}, '${activeWithdrawal.id}')"><i class="fas fa-hand-holding-heart"></i> Repay</button>`;
+                }
 
+                extraRows = `<div class="uc-row"><strong>Status (${currentMonthLabel}):</strong> <span class="status-badge ${statusClass}">${status}</span></div>${repayInfo}`;
                 actions = `
                     <div class="uc-actions center-actions">
                         <button class="action-btn btn-pay" onclick="window.handlePay('${user.id}')"><i class="fas fa-money-bill-wave"></i> Pay</button>
+                        ${repayButton}
                         <button class="action-btn btn-history" onclick="window.handleHistory('${user.id}')"><i class="fas fa-history"></i> History</button>
                     </div>
                 `;
@@ -955,10 +1014,7 @@
             }
 
             card.innerHTML = `
-                <div class="uc-header">
-                    <div class="uc-name">${user.name}</div>
-                    <div class="uc-role ${roleBadge}">${user.role}</div>
-                </div>
+                <div class="uc-header"><div class="uc-name">${user.name}</div><div class="uc-role ${roleBadge}">${user.role}</div></div>
                 <div class="uc-details">
                     <div class="uc-row"><strong>Phone (ID):</strong> <span>${user.phone}</span></div>
                     <div class="uc-row"><strong>Monthly Pay:</strong> <span style="color:#2ecc71; font-weight:600;">${amount}</span></div>
@@ -969,96 +1025,43 @@
             return card;
         }
 
-        // --- HISTORY MODAL LOGIC ---
         window.handleHistory = (uid) => {
             const user = globalUsers.find(u => u.id === uid);
             if (!user) return;
-
             document.getElementById('historyUserName').innerText = `History for: ${user.name} (${user.phone})`;
-            
-            // 1. Fetch Standard Payments
-            const userPayments = globalPayments
-                .filter(p => p.userId === uid)
-                .map(p => ({
-                    month: p.month,
-                    status: p.status,
-                    amount: `₹${p.amount}`,
-                    type: 'Payment'
-                }));
-
-            // 2. Fetch Withdrawals (Only if looking at admin history, or logic can be adjusted to show who withdrew)
-            const userWithdrawals = globalWithdrawals
-                .filter(w => w.withdrawnBy === uid)
-                .map(w => {
-                    const netAmt = w.netPayoutAmount ? `₹${w.netPayoutAmount} (Net)` : `₹${w.withdrawnAmount}`;
-                    return {
-                        month: w.month,
-                        status: 'Withdrawal',
-                        amount: netAmt, 
-                        type: 'Withdrawal'
-                    };
-                });
-
-            // 3. Merge and Sort by Date (Descending)
+            const userPayments = globalPayments.filter(p => p.userId === uid).map(p => ({ month: p.month, status: p.status, amount: `₹${p.amount}`, type: 'Payment' }));
+            const userWithdrawals = globalWithdrawals.filter(w => w.withdrawnBy === uid).map(w => ({ month: w.month, status: 'Withdrawal', amount: `₹${w.netPayoutAmount || w.withdrawnAmount}`, type: 'Withdrawal' }));
             const allHistory = [...userPayments, ...userWithdrawals].sort((a, b) => b.month.localeCompare(a.month));
-
             const tableBody = document.getElementById('historyTableBody');
             tableBody.innerHTML = "";
-
             if (allHistory.length > 0) {
                 allHistory.forEach(record => {
                     const row = document.createElement('tr');
-                    let statusColor = "#f39c12"; // Pending default
-                    let statusText = record.status;
-
-                    if(record.status === "Paid") { statusColor = "#2ecc71"; }
-                    else if(record.status === "Advance") { statusColor = "#34495e"; }
-                    else if(record.status === "Withdrawal") { 
-                        statusColor = "#e67e22"; 
-                        statusText = "Withdrawn";
-                    }
-
-                    row.innerHTML = `
-                        <td>${record.month}</td>
-                        <td><span style="color:${statusColor}; font-weight:600;">${statusText}</span></td>
-                        <td>${record.amount}</td>
-                    `;
+                    let statusColor = "#f39c12"; 
+                    if(record.status === "Paid") statusColor = "#2ecc71";
+                    else if(record.status === "Advance") statusColor = "#34495e";
+                    else if(record.status === "Withdrawal") statusColor = "#e67e22";
+                    else if(record.status === "Repaid") statusColor = "var(--repay-color)";
+                    row.innerHTML = `<td>${record.month}</td><td><span style="color:${statusColor}; font-weight:600;">${record.status}</span></td><td>${record.amount}</td>`;
                     tableBody.appendChild(row);
                 });
             } else {
                 tableBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No history found.</td></tr>";
             }
-
             document.getElementById('historyModal').style.display = 'block';
         };
 
         window.closeHistoryModal = () => { document.getElementById('historyModal').style.display = 'none'; };
 
-        // --- PAY MODAL LOGIC ---
         window.handlePay = (uid) => {
             const user = globalUsers.find(u => u.id === uid);
             if(user) {
                 document.getElementById('payUserId').value = uid;
                 document.getElementById('payUserName').value = `${user.name} (${user.phone})`;
                 document.getElementById('payAmount').value = user.monthlyPay || 0;
-                
                 const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const currentMonthString = `${year}-${month}`;
-                
-                document.getElementById('payMonth').value = currentMonthString;
-                document.getElementById('payStatus').value = 'Paid'; // Default
-
-                const monthInput = document.getElementById('payMonth');
-                monthInput.onchange = (e) => {
-                    if(e.target.value > currentMonthString) {
-                         document.getElementById('payStatus').value = 'Advance';
-                    } else {
-                         document.getElementById('payStatus').value = 'Paid';
-                    }
-                };
-
+                document.getElementById('payMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                document.getElementById('payStatus').value = 'Paid'; 
                 document.getElementById('payModal').style.display = 'block';
             }
         };
@@ -1071,33 +1074,66 @@
             const month = document.getElementById('payMonth').value;
             const status = document.getElementById('payStatus').value;
             const amount = document.getElementById('payAmount').value;
-            
-            const existingPayment = globalPayments.find(p => p.userId === uid && p.month === month);
-            
+            const existingPayment = globalPayments.find(p => p.userId === uid && p.month === month && p.status !== 'Repaid');
             if (existingPayment) {
-                update(ref(db, `payments/${existingPayment.id}`), {
-                    status: status,
-                    amount: amount,
-                    timestamp: Date.now()
-                }).then(() => {
-                    alert("Payment Status Updated!");
-                    window.closePayModal();
-                });
+                update(ref(db, `payments/${existingPayment.id}`), { status, amount, timestamp: Date.now() }).then(() => { alert("Payment Updated!"); window.closePayModal(); });
             } else {
-                push(ref(db, 'payments'), {
-                    userId: uid,
-                    month: month,
-                    status: status,
-                    amount: amount,
-                    timestamp: Date.now()
-                }).then(() => {
-                    alert("Payment Recorded!");
-                    window.closePayModal();
-                });
+                push(ref(db, 'payments'), { userId: uid, month, status, amount, timestamp: Date.now() }).then(() => { alert("Payment Recorded!"); window.closePayModal(); });
             }
         });
 
-        // --- ADD/EDIT USER ---
+        // REPAY MODAL LOGIC (UPDATED WITH BALANCING LOGIC)
+        window.handleRepay = (uid, loanAmount, withdrawalId) => {
+            const user = globalUsers.find(u => u.id === uid);
+            if(user) {
+                document.getElementById('repayUserId').value = uid;
+                document.getElementById('repayWithdrawalId').value = withdrawalId;
+                document.getElementById('repayUserName').value = `${user.name} (${user.phone})`;
+                document.getElementById('repayDueAmount').value = loanAmount;
+                const now = new Date();
+                document.getElementById('repayMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                document.getElementById('repayAmount').value = "";
+                document.getElementById('repayBalance').value = loanAmount;
+                document.getElementById('repayModal').style.display = 'block';
+            }
+        };
+
+        // Live Balance Calculation
+        document.getElementById('repayAmount').addEventListener('input', function() {
+            const due = parseFloat(document.getElementById('repayDueAmount').value) || 0;
+            const paying = parseFloat(this.value) || 0;
+            document.getElementById('repayBalance').value = Math.max(0, due - paying);
+        });
+
+        window.closeRepayModal = () => { document.getElementById('repayModal').style.display = 'none'; };
+
+        document.getElementById('repayForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const uid = document.getElementById('repayUserId').value;
+            const wid = document.getElementById('repayWithdrawalId').value;
+            const month = document.getElementById('repayMonth').value;
+            const amount = Number(document.getElementById('repayAmount').value);
+            const balance = Number(document.getElementById('repayBalance').value);
+            
+            // 1. Record the repayment in history
+            push(ref(db, 'payments'), { 
+                userId: uid, 
+                month: month, 
+                status: 'Repaid', 
+                amount: amount, 
+                balanceAfterRepay: balance,
+                timestamp: Date.now() 
+            }).then(() => { 
+                // 2. Update the original withdrawal record to reflect the new balance
+                update(ref(db, `withdrawals/${wid}`), {
+                    repayTotal: balance
+                }).then(() => {
+                    alert("Repayment Recorded and Balance Updated!"); 
+                    window.closeRepayModal(); 
+                });
+            }).catch(err => alert("Error: " + err.message));
+        });
+
         window.openModal = (reset = true) => {
             const modal = document.getElementById('userModal');
             if(reset) {
@@ -1105,7 +1141,7 @@
                 document.getElementById('editUserId').value = ""; 
                 document.getElementById('modalTitle').innerText = "Add New User";
                 document.getElementById('userPhone').disabled = false;
-                document.getElementById('userName').disabled = false; // ENABLED for new users
+                document.getElementById('userName').disabled = false;
             }
             modal.style.display = "block";
         };
@@ -1116,10 +1152,8 @@
             if(user) {
                 document.getElementById('userPhone').value = user.phone;
                 document.getElementById('userPhone').disabled = true;
-                
                 document.getElementById('userName').value = user.name;
-                document.getElementById('userName').disabled = true; // DISABLED for edits
-                
+                document.getElementById('userName').disabled = true; 
                 document.getElementById('userAmount').value = user.monthlyPay || "";
                 document.getElementById('userRole').value = user.role;
                 document.getElementById('editUserId').value = uid;
@@ -1146,9 +1180,7 @@
             btn.innerText = "Processing..."; btn.disabled = true;
 
             if (uid) {
-                update(ref(db, `users/${uid}`), { name, monthlyPay: amount, role }).then(() => {
-                    alert("User updated!"); window.closeModal(); btn.innerText = "Save User"; btn.disabled = false;
-                });
+                update(ref(db, `users/${uid}`), { name, monthlyPay: amount, role }).then(() => { alert("User updated!"); window.closeModal(); btn.innerText = "Save User"; btn.disabled = false; });
             } else {
                 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
                 const secondaryAuth = getAuth(secondaryApp);
@@ -1176,14 +1208,13 @@
         window.onclick = function(event) {
             if (event.target == document.getElementById('userModal')) closeModal();
             if (event.target == document.getElementById('payModal')) closePayModal();
+            if (event.target == document.getElementById('repayModal')) closeRepayModal();
             if (event.target == document.getElementById('historyModal')) closeHistoryModal();
             if (event.target == document.getElementById('withdrawalModal')) closeWithdrawalModal();
-            if (event.target == document.getElementById('receivedHistoryModal')) closeReceivedHistoryModal(); // Added logic to close new modal
+            if (event.target == document.getElementById('receivedHistoryModal')) closeReceivedHistoryModal();
         }
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            signOut(auth).then(() => window.location.href = "index.html");
-        });
+        document.getElementById('logoutBtn').addEventListener('click', () => { signOut(auth).then(() => window.location.href = "index.html"); });
     </script>
 </body>
 </html>

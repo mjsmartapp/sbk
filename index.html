@@ -4,119 +4,155 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SBK SAVINGS LOGIN</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* --- RESET & GLOBAL --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* --- PREMIUM RESET & VARIABLES --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        :root {
+            --primary-color: #4f46e5;      
+            --primary-hover: #4338ca;
+            --secondary-color: #0f172a;    
+            --bg-color: #f8fafc;           
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;          
+            --text-muted: #64748b;         
+            --border-color: #e2e8f0;       
+            --danger-color:  #ef4444;      
+            --info-color:    #3b82f6;      
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius-md: 12px;
+            --radius-lg: 24px;
+        }
+
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ffe0b2, #bbdefb); /* Matched to Admin Header */
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* --- CONTAINER CARD --- */
+        /* --- FULL SCREEN SECTION VIEW (Removed White Background) --- */
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 3rem 2rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: transparent;
+            padding: 40px 30px;
             width: 100%;
-            max-width: 380px;
+            max-width: 450px;
             text-align: center;
             position: relative;
-            backdrop-filter: blur(10px);
+            animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h2 {
-            margin-bottom: 1.5rem;
-            color: #333;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+            margin-bottom: 35px;
+            color: var(--secondary-color);
+            font-weight: 800;
+            font-size: 34px;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
         /* --- INPUTS --- */
-        input, select {
+        input {
             width: 100%;
-            padding: 14px 16px;
-            margin: 10px 0;
-            border: 1px solid #e1e1e1;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #f9f9f9;
+            padding: 16px 20px;
+            margin: 12px 0;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--text-dark);
+            backdrop-filter: blur(10px);
             transition: all 0.3s ease;
-            font-family: 'Poppins', sans-serif;
         }
-        input:focus, select:focus {
-            border-color: #764ba2;
-            background: #fff;
+        input::placeholder {
+            color: rgba(30, 41, 59, 0.6);
+        }
+        input:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.15);
+            transform: translateY(-2px);
         }
 
-        /* --- BUTTON --- */
+        /* --- BUTTON & ANIMATIONS --- */
         button {
+            position: relative;
+            overflow: hidden;
             width: 100%;
-            padding: 14px;
-            margin-top: 20px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            padding: 16px;
+            margin-top: 25px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: var(--radius-lg);
+            font-size: 18px;
+            font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: 0.3s;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(79, 70, 229, 0.4);
         }
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(0);
         }
 
-        /* --- ERROR MESSAGE --- */
-        .error {
-            color: #d32f2f;
-            background-color: #ffebee;
-            font-size: 13px;
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ffcdd2;
-            display: none;
-        }
-
-        .hidden { display: none; }
-
-        /* --- LOADER BAR --- */
-        .loader-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background-color: transparent;
-            z-index: 9999;
-            display: none;
-        }
-        .loader-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
-            width: 30%;
+        /* Internal Button Loader Bar */
+        .btn-loader-bar {
             position: absolute;
-            animation: loading 1s infinite ease-in-out;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            width: 30%;
+            display: none;
+            border-radius: 4px;
+            animation: btnLoadingBar 1s infinite ease-in-out;
         }
-        @keyframes loading {
+        @keyframes btnLoadingBar {
             0% { left: -30%; width: 30%; }
             50% { width: 50%; }
             100% { left: 100%; width: 30%; }
         }
+
+        /* --- ERROR MESSAGE --- */
+        .error {
+            color: var(--danger-color);
+            background-color: rgba(239, 68, 68, 0.1);
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            backdrop-filter: blur(10px);
+            display: none;
+            animation: fadeInDown 0.3s ease;
+        }
+
+        /* --- TOP LOADER BAR --- */
+        .loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 5px; z-index: 9999; display: none; background: transparent; }
+        .loader-bar { height: 100%; width: 30%; background: linear-gradient(90deg, var(--primary-color), var(--info-color)); position: absolute; animation: loading 1s infinite ease-in-out; border-radius: 4px; box-shadow: 0 2px 10px rgba(79, 70, 229, 0.5); }
+        @keyframes loading { 0% { left: -30%; width: 30%; } 50% { width: 50%; } 100% { left: 100%; width: 30%; } }
     </style>
 </head>
 <body>
@@ -130,7 +166,10 @@
             <h2>Welcome Back</h2>
             <input type="tel" id="loginPhone" placeholder="Phone Number" maxlength="10">
             <input type="password" id="loginPassword" placeholder="Password">
-            <button id="btnLogin">Sign In</button>
+            <button id="btnLogin">
+                <span id="btnText"><i class="fas fa-sign-in-alt"></i> Sign In</span>
+                <div id="btnBar" class="btn-loader-bar"></div>
+            </button>
         </div>
 
         <p id="message" class="error"></p>
@@ -165,10 +204,28 @@
 
         const msgBox = document.getElementById('message');
         const loader = document.getElementById('loader');
+        const btnLogin = document.getElementById('btnLogin');
+        const btnText = document.getElementById('btnText');
+        const btnBar = document.getElementById('btnBar');
         
         const getEmail = (phone) => `${phone}@tirupathistore.com`;
-        const showLoader = () => { loader.style.display = 'block'; msgBox.style.display = 'none'; };
-        const hideLoader = () => { loader.style.display = 'none'; };
+        
+        const showLoader = () => { 
+            loader.style.display = 'block'; 
+            msgBox.style.display = 'none'; 
+            btnText.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Authenticating...';
+            btnBar.style.display = 'block';
+            btnLogin.disabled = true;
+            btnLogin.style.opacity = '0.85';
+        };
+        
+        const hideLoader = () => { 
+            loader.style.display = 'none'; 
+            btnText.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+            btnBar.style.display = 'none';
+            btnLogin.disabled = false;
+            btnLogin.style.opacity = '1';
+        };
 
         const redirectUser = (uid) => {
             get(child(ref(db), `users/${uid}`)).then((snapshot) => {
@@ -177,7 +234,7 @@
                     window.location.href = role === 'admin' ? 'admin.html' : 'user.html';
                 } else {
                     hideLoader();
-                    msgBox.innerText = "User data not found.";
+                    msgBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> User data not found.';
                     msgBox.style.display = 'block';
                 }
             }).catch((err) => {
@@ -192,7 +249,7 @@
             const password = document.getElementById('loginPassword').value.trim();
 
             if (phone.length !== 10 || isNaN(phone)) {
-                msgBox.innerText = "Invalid Phone Number.";
+                msgBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Invalid Phone Number.';
                 msgBox.style.display = 'block';
                 return;
             }
@@ -212,7 +269,7 @@
                 })
                 .catch((error) => {
                     hideLoader();
-                    msgBox.innerText = "Invalid Phone Number or Password.";
+                    msgBox.innerHTML = '<i class="fas fa-times-circle"></i> Invalid Phone Number or Password.';
                     msgBox.style.display = 'block';
                 });
         });

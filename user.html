@@ -56,12 +56,25 @@
             display: none;
             flex-direction: column;
             gap: 24px;
+            padding-bottom: 80px; /* Buffer for bottom nav */
         }
 
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* --- VIEWS --- */
+        .view-section {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .view-section.active-view {
+            display: flex;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- GENERAL CARD STYLE --- */
         .card { 
@@ -140,7 +153,7 @@
         .stat-card .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; z-index: 1; }
         .stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--text-dark); z-index: 1; }
         
-        /* Stat Border Colors matching Admin */
+        /* Stat Border Colors */
         .border-blue::before { background: var(--info-color); } 
         .border-orange::before { background: var(--warning-color); } 
         .border-green::before { background: var(--success-color); } 
@@ -148,7 +161,7 @@
         .border-teal::before { background: var(--repay-color); } 
         .border-rose::before { background: var(--danger-color); } 
 
-        /* Text Color Modifiers (Used by JS) */
+        /* Text Color Modifiers */
         .text-pending { color: var(--warning-color) !important; }
         .text-success { color: var(--success-color) !important; }
         .text-advance { color: var(--advance-color) !important; }
@@ -220,7 +233,7 @@
         td { color: var(--text-dark); font-size: 14px; }
         tr:hover td { background-color: #fafafa; }
 
-        /* Status Pills (Matched to Admin Status Badges) */
+        /* Status Pills */
         .status-pill {
             padding: 6px 14px; border-radius: 20px; color: white; font-weight: 600; 
             font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; 
@@ -235,12 +248,39 @@
         .date-subtext { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
         .amount-cell { font-weight: 700; font-size: 15px; }
 
+        /* --- BOTTOM NAVIGATION (FOOTER) --- */
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(90deg, #ffe0b2, #bbdefb); 
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(0,0,0,0.05);
+            z-index: 2000;
+            padding-bottom: env(safe-area-inset-bottom);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+        }
+        .mobile-bottom-nav ul { display: flex; justify-content: space-around; list-style: none; margin: 0; padding: 12px 10px; }
+        .bot-nav-item {
+            flex: 1; text-align: center; color: var(--secondary-color); font-size: 22px; 
+            padding: 8px 0; border-radius: var(--radius-md); cursor: pointer; transition: 0.3s;
+            position: relative; opacity: 0.6;
+        }
+        .bot-nav-item i { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bot-nav-item.active { color: var(--primary-color); opacity: 1; }
+        .bot-nav-item.active i { transform: translateY(-4px) scale(1.15); }
+        .bot-nav-item.active::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 6px; height: 6px; border-radius: 50%; background-color: var(--primary-color);
+        }
+
         /* --- LOADER --- */
         .loader-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; z-index: 9999; display: block; background: transparent; }
         .loader-bar { height: 100%; width: 30%; background: linear-gradient(90deg, var(--primary-color), var(--info-color)); position: absolute; animation: loading 1s infinite ease-in-out; border-radius: 4px; }
         @keyframes loading { 0% { left: -30%; width: 30%; } 50% { width: 50%; } 100% { left: 100%; width: 30%; } }
 
-        /* --- CUSTOM POPUP MODAL (Matched to Admin Modal) --- */
+        /* --- CUSTOM POPUP MODAL --- */
         .popup-overlay {
             display: none; position: fixed; z-index: 2500; left: 0; top: 0; width: 100%; height: 100%; 
             background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); 
@@ -298,7 +338,7 @@
         <div class="loader-bar"></div>
     </div>
 
-    <div id="dashboard" class="app-container">
+    <div id="appContainer" class="app-container">
         
         <div class="card header-panel">
             <div class="user-info">
@@ -310,100 +350,152 @@
             </button>
         </div>
 
-        <div class="stats-grid">
-            
-            <div class="stat-card border-blue">
-                <div class="stat-content">
-                    <div class="stat-label">Monthly Pay</div>
-                    <div class="stat-value text-blue" id="monthlyPay">₹0</div>
+        <div id="view-dashboard" class="view-section active-view">
+            <div class="stats-grid">
+                <div class="stat-card border-blue">
+                    <div class="stat-content">
+                        <div class="stat-label">Monthly Pay</div>
+                        <div class="stat-value text-blue" id="monthlyPay">₹0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card border-orange">
+                    <div class="stat-content">
+                        <div class="stat-label">Current Month</div>
+                        <div class="stat-value" id="currentStatus">Checking...</div>
+                    </div>
+                </div>
+
+                <div class="stat-card border-green">
+                    <div class="stat-content">
+                        <div class="stat-label">Total Paid</div>
+                        <div class="stat-value text-success" id="totalPaid">₹0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card border-purple">
+                    <div class="stat-content">
+                        <div class="stat-label">Withdrawn</div>
+                        <div class="stat-value text-withdraw" id="totalWithdrawn">₹0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card border-teal">
+                    <div class="stat-content">
+                        <div class="stat-label">Repaid Total</div>
+                        <div class="stat-value text-repaid" id="totalRepaid">₹0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card border-rose">
+                    <div class="stat-content">
+                        <div class="stat-label">Repay Due Amount</div>
+                        <div class="stat-value text-due" id="repayDueAmount">₹0</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="stat-card border-orange">
-                <div class="stat-content">
-                    <div class="stat-label">Current Month</div>
-                    <div class="stat-value" id="currentStatus">Checking...</div>
-                </div>
-            </div>
-
-            <div class="stat-card border-green">
-                <div class="stat-content">
-                    <div class="stat-label">Total Paid</div>
-                    <div class="stat-value text-success" id="totalPaid">₹0</div>
-                </div>
-            </div>
-
-            <div class="stat-card border-purple">
-                <div class="stat-content">
-                    <div class="stat-label">Withdrawn</div>
-                    <div class="stat-value text-withdraw" id="totalWithdrawn">₹0</div>
-                </div>
-            </div>
-
-            <div class="stat-card border-teal">
-                <div class="stat-content">
-                    <div class="stat-label">Repaid Total</div>
-                    <div class="stat-value text-repaid" id="totalRepaid">₹0</div>
-                </div>
-            </div>
-
-            <div class="stat-card border-rose">
-                <div class="stat-content">
-                    <div class="stat-label">Repay Due Amount</div>
-                    <div class="stat-value text-due" id="repayDueAmount">₹0</div>
+            <div class="card" style="margin-top: 20px; padding: 20px;">
+                <h3 style="color: var(--danger-color); border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-exclamation-circle"></i> Withdrawal Repay Pending
+                </h3>
+                <div id="repayPendingList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="color: var(--text-muted); text-align: center; font-weight: 500;">Loading...</p>
                 </div>
             </div>
 
         </div>
 
-        <div class="card table-panel">
-            
-            <div class="table-header-row">
-                <div class="table-title">
-                    <i class="fas fa-history" style="color: var(--primary-color);"></i> History Records
-                </div>
-                
-                <div class="filter-group">
-                    <div class="search-wrapper">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" class="search-input" placeholder="Search Data...">
+        <div id="view-history" class="view-section">
+            <div class="card table-panel">
+                <div class="table-header-row">
+                    <div class="table-title">
+                        <i class="fas fa-history" style="color: var(--primary-color);"></i> My History Records
                     </div>
                     
-                    <select id="statusFilter" class="custom-select">
-                        <option value="">All Status</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Advance">Advance</option>
-                        <option value="Withdrawal">Withdraw</option>
-                        <option value="Repaid">Repaid</option>
-                    </select>
+                    <div class="filter-group">
+                        <div class="search-wrapper">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" class="search-input" placeholder="Search Data...">
+                        </div>
+                        
+                        <select id="statusFilter" class="custom-select">
+                            <option value="">All Status</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Advance">Advance</option>
+                            <option value="Withdrawal">Withdraw</option>
+                            <option value="Repaid">Repaid</option>
+                        </select>
 
-                    <input type="month" id="monthFilter" class="custom-select">
+                        <input type="month" id="monthFilter" class="custom-select">
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Month / Date</th>
+                                <th style="width: 30%;">Status</th>
+                                <th style="width: 30%;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px; font-weight: 500;">
+                                    Loading Data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
 
-            <div class="table-container">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 40%;">Month / Date</th>
-                            <th style="width: 30%;">Status</th>
-                            <th style="width: 30%;">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody">
-                        <tr>
-                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px; font-weight: 500;">
-                                Loading Data...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div id="view-withdrawals" class="view-section">
+            <div class="card table-panel">
+                <div class="table-header-row">
+                    <div class="table-title">
+                        <i class="fas fa-hand-holding-usd" style="color: var(--withdrawal-color);"></i> All Users Withdrawal & Repayment History
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">User / Date</th>
+                                <th style="width: 30%;">Status</th>
+                                <th style="width: 30%;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allWithdrawalsTableBody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px; font-weight: 500;">
+                                    Loading Data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
         </div>
 
     </div>
+
+    <nav class="mobile-bottom-nav">
+        <ul>
+            <li id="bot-nav-dashboard" class="bot-nav-item active" onclick="window.switchView('dashboard')">
+                <i class="fas fa-home"></i>
+            </li>
+            <li id="bot-nav-history" class="bot-nav-item" onclick="window.switchView('history')">
+                <i class="fas fa-history"></i>
+            </li>
+            <li id="bot-nav-withdrawals" class="bot-nav-item" onclick="window.switchView('withdrawals')">
+                <i class="fas fa-hand-holding-usd"></i>
+            </li>
+        </ul>
+    </nav>
 
     <div id="customPopup" class="popup-overlay">
         <div class="popup-content">
@@ -435,7 +527,7 @@
         const db = getDatabase(app);
 
         const loader = document.getElementById('loader');
-        const dashboard = document.getElementById('dashboard');
+        const appContainer = document.getElementById('appContainer');
         
         const popupOverlay = document.getElementById('customPopup');
         const popupIcon = document.getElementById('popupIcon');
@@ -443,6 +535,9 @@
         const popupMessage = document.getElementById('popupMessage');
         const popupActions = document.getElementById('popupActions');
 
+        let globalUsers = [];
+        let allWithdrawals = [];
+        let allPayments = []; 
         let myPayments = [];
         let myWithdrawals = [];
         let combinedHistory = []; 
@@ -455,42 +550,95 @@
             }
         });
 
+        // VIEW SWITCHER
+        window.switchView = (viewName) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+            document.getElementById(`view-${viewName}`).classList.add('active-view');
+            
+            document.querySelectorAll('.bot-nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`bot-nav-${viewName}`).classList.add('active');
+        };
+
         function initUserDashboard(uid) {
             // Show loader bar
             loader.style.display = 'block';
             
-            onValue(ref(db, `users/${uid}`), (snapshot) => {
+            // Listen to all users (used for name mapping in the All Withdrawals view)
+            onValue(ref(db, 'users'), (snapshot) => {
                 if (snapshot.exists()) {
-                    const userData = snapshot.val();
-                    document.getElementById('userName').innerText = userData.name || "User";
-                    document.getElementById('userPhone').innerHTML = `<i class="fas fa-phone-alt"></i> ${userData.phone || ""}`;
-                    document.getElementById('monthlyPay').innerText = `₹${userData.monthlyPay || 0}`;
+                    globalUsers = Object.keys(snapshot.val()).map(key => ({ id: key, ...snapshot.val()[key] }));
+                    
+                    // Specific logic for the logged in user's profile info
+                    const userData = snapshot.val()[uid];
+                    if (userData) {
+                        document.getElementById('userName').innerText = userData.name || "User";
+                        document.getElementById('userPhone').innerHTML = `<i class="fas fa-phone-alt"></i> ${userData.phone || ""}`;
+                        document.getElementById('monthlyPay').innerText = `₹${userData.monthlyPay || 0}`;
+                    }
+                    
+                    renderAllWithdrawals(); // Re-render if names update
+                    renderRepayPending();   // Update names in pending list
                     
                     loader.style.display = 'none';
-                    dashboard.style.display = 'flex';
+                    appContainer.style.display = 'flex';
                 }
             });
 
             onValue(ref(db, 'payments'), (snapshot) => {
                 const all = snapshot.val() || {};
+                allPayments = Object.values(all); // Store all payments to track everyone's repayments
+                
                 myPayments = [];
-                Object.values(all).forEach(p => {
+                allPayments.forEach(p => {
                     if (p.userId === uid) {
                         myPayments.push(p);
                     }
                 });
                 refreshDataAndTable();
+                renderAllWithdrawals(); // Need to re-render to show updated repaid transactions
             });
 
             onValue(ref(db, 'withdrawals'), (snapshot) => {
                 const all = snapshot.val() || {};
+                allWithdrawals = Object.values(all); // Used for the "All Withdrawals" view
+                
                 myWithdrawals = [];
-                Object.values(all).forEach(w => {
+                allWithdrawals.forEach(w => {
                     if (w.withdrawnBy === uid) {
                         myWithdrawals.push(w);
                     }
                 });
+                
                 refreshDataAndTable();
+                renderAllWithdrawals(); // Used for the new tab
+                renderRepayPending();   // Update the pending list on Home View
+            });
+        }
+
+        // NEW: Renders the Pending Repayments list on the Home Dashboard
+        function renderRepayPending() {
+            const container = document.getElementById('repayPendingList');
+            container.innerHTML = "";
+            
+            // Filter withdrawals that have a remaining balance > 0
+            const pendingWithdrawals = allWithdrawals.filter(w => Number(w.repayTotal) > 0);
+            
+            if (pendingWithdrawals.length === 0) {
+                container.innerHTML = `<p style='color: var(--success-color); text-align: center; padding: 10px; font-weight:600;'><i class='fas fa-check-circle' style='margin-right:8px;'></i>No pending repayments!</p>`;
+                return;
+            }
+
+            pendingWithdrawals.forEach(w => {
+                const user = globalUsers.find(u => u.id === w.withdrawnBy) || { name: 'Admin/Unknown', phone: '-' };
+                const item = document.createElement('div');
+                item.style.cssText = "display: flex; justify-content: space-between; padding: 12px 15px; background: var(--bg-color); border-radius: var(--radius-md); align-items: center; border: 1px solid var(--border-color);";
+                item.innerHTML = `
+                    <div style="font-weight: 600; color: var(--text-dark);">${user.name}</div>
+                    <div style="font-weight: 700; color: var(--danger-color); font-size: 15px;">
+                        ₹${w.repayTotal}
+                    </div>
+                `;
+                container.appendChild(item);
             });
         }
 
@@ -511,15 +659,13 @@
             
             myWithdrawals.forEach(w => {
                 totalWithdrawn += Number(w.withdrawnAmount || 0);
-                // Calculation for due balance: usually based on the original repay total set by admin
+                // Calculation for due balance
                 totalWithdrawalDebt += Number(w.repayTotal || 0);
             });
 
             document.getElementById('totalPaid').innerText = `₹${totalPaid}`;
             document.getElementById('totalWithdrawn').innerText = `₹${totalWithdrawn}`;
             document.getElementById('totalRepaid').innerText = `₹${totalRepaid}`;
-            
-            // Display total remaining due amount
             document.getElementById('repayDueAmount').innerText = `₹${totalWithdrawalDebt}`;
             
             updateCurrentMonthStatus();
@@ -567,6 +713,7 @@
             }
         }
 
+        // Filters for MY HISTORY only
         function applyFilters() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
@@ -585,6 +732,7 @@
             renderTable(filteredData);
         }
 
+        // Renders MY HISTORY table
         function renderTable(data) {
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = "";
@@ -618,6 +766,60 @@
                     </td>
                     <td><span class="status-pill ${pillClass}">${displayStatus}</span></td>
                     <td class="amount-cell" style="color: ${item.type === 'Payment' ? 'var(--success-color)' : 'var(--danger-color)'};">₹${item.amount}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // UPDATED: Renders ALL USERS WITHDRAWAL & REPAYMENT table
+        function renderAllWithdrawals() {
+            const tbody = document.getElementById('allWithdrawalsTableBody');
+            tbody.innerHTML = "";
+
+            // Gather all withdrawals
+            const withdrawalsList = allWithdrawals.map(w => ({
+                userId: w.withdrawnBy,
+                type: 'Withdrawal',
+                amount: w.withdrawnAmount,
+                timestamp: w.timestamp,
+                month: w.month
+            }));
+
+            // Gather all repayments
+            const repaymentsList = allPayments.filter(p => p.status === 'Repaid').map(p => ({
+                userId: p.userId,
+                type: 'Repay',
+                amount: p.amount,
+                timestamp: p.timestamp,
+                month: p.month
+            }));
+
+            // Combine and sort by timestamp (newest first)
+            const combinedAll = [...withdrawalsList, ...repaymentsList].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            if (combinedAll.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 30px; color: var(--text-muted); font-weight: 500;">No records found.</td></tr>`;
+                return;
+            }
+
+            combinedAll.forEach(item => {
+                const user = globalUsers.find(u => u.id === item.userId) || { name: 'Admin/Unknown' };
+                const dateObj = item.timestamp ? new Date(item.timestamp) : new Date();
+                const dateStr = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                const row = document.createElement('tr');
+                
+                let pillClass = item.type === 'Withdrawal' ? 'pill-withdraw' : 'pill-repaid';
+                let amountColor = item.type === 'Withdrawal' ? 'var(--danger-color)' : 'var(--repay-color)';
+                let displayType = item.type === 'Withdrawal' ? 'Withdrawal' : 'Repaid';
+
+                row.innerHTML = `
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-dark); font-size: 14px;">${user.name}</div>
+                        <div class="date-subtext">${dateStr} (${item.month})</div>
+                    </td>
+                    <td><span class="status-pill ${pillClass}">${displayType}</span></td>
+                    <td class="amount-cell" style="color: ${amountColor};">₹${item.amount}</td>
                 `;
                 tbody.appendChild(row);
             });

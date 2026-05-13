@@ -231,7 +231,8 @@
             get(child(ref(db), `users/${uid}`)).then((snapshot) => {
                 if (snapshot.exists()) {
                     const role = snapshot.val().role;
-                    window.location.href = role === 'admin' ? 'admin.html' : 'user.html';
+                    // Replace state to avoid navigating back to login page
+                    window.location.replace(role === 'admin' ? 'admin.html' : 'user.html');
                 } else {
                     hideLoader();
                     msgBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> User data not found.';

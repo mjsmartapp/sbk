@@ -416,13 +416,13 @@
             <h2>SBK SAVINGS</h2>
         </div>
         <ul class="nav-links">
-            <li id="nav-dash" class="nav-item active" onclick="switchView('dashboard')">
+            <li id="nav-dash" class="nav-item active" onclick="window.switchView('dashboard')">
                 <i class="fas fa-home"></i> Dashboard
             </li>
-            <li id="nav-pay" class="nav-item" onclick="switchView('payment')">
+            <li id="nav-pay" class="nav-item" onclick="window.switchView('payment')">
                 <i class="fas fa-credit-card"></i> Payment
             </li>
-            <li id="nav-users" class="nav-item" onclick="switchView('add-users')">
+            <li id="nav-users" class="nav-item" onclick="window.switchView('add-users')">
                 <i class="fas fa-users"></i> Users & Add
             </li>
         </ul>
@@ -433,13 +433,13 @@
 
     <nav class="mobile-bottom-nav">
         <ul>
-            <li id="bot-nav-dash" class="bot-nav-item active" onclick="switchView('dashboard')">
+            <li id="bot-nav-dash" class="bot-nav-item active" onclick="window.switchView('dashboard')">
                 <i class="fas fa-home"></i>
             </li>
-            <li id="bot-nav-pay" class="bot-nav-item" onclick="switchView('payment')">
+            <li id="bot-nav-pay" class="bot-nav-item" onclick="window.switchView('payment')">
                 <i class="fas fa-rupee-sign"></i>
             </li>
-            <li id="bot-nav-users" class="bot-nav-item" onclick="switchView('add-users')">
+            <li id="bot-nav-users" class="bot-nav-item" onclick="window.switchView('add-users')">
                 <i class="fas fa-users"></i>
             </li>
         </ul>
@@ -447,14 +447,14 @@
 
     <main class="main-content" id="mainContent">
         
-        <div id="view-dashboard" class="view-section fullscreen-view active-view">
+        <div id="view-dashboard" class="view-section active-view">
             <div class="stat-grid">
                 <div class="stat-card border-blue">
                     <h3>Total Users</h3>
                     <div class="value text-blue" id="dashboardTotalUsers">0</div>
                 </div>
                 
-                <div class="stat-card clickable border-green" onclick="switchView('transactions')">
+                <div class="stat-card clickable border-green" onclick="window.switchView('transactions')">
                     <h3>Received Amount</h3>
                     <div class="value text-green" id="dashboardReceivedAmount">₹0</div>
                     <div style="font-weight: 500; font-size: 12px; color: var(--text-muted); margin-top: 8px;">
@@ -483,12 +483,12 @@
                     <div class="value text-blue" id="dashboardInterestAmount">₹0</div>
                 </div>
 
-                <div class="stat-card clickable border-teal" onclick="switchView('repay-pending')">
+                <div class="stat-card clickable border-teal" onclick="window.switchView('repay-pending')">
                     <h3 style="color: var(--repay-color)">Repay Pending Count</h3>
                     <div class="value text-teal" id="dashboardRepayPendingCount">0</div>
                 </div>
 
-                <div class="stat-card clickable border-teal" onclick="switchView('repay-pending')">
+                <div class="stat-card clickable border-teal" onclick="window.switchView('repay-pending')">
                     <h3 style="color: var(--repay-color)">Repay Pending Amount</h3>
                     <div class="value text-teal" id="dashboardRepayPendingAmount">₹0</div>
                 </div>
@@ -567,6 +567,42 @@
             </div>
             <div id="userGrid" class="user-grid">
                 <div style="text-align:center; width: 100%; grid-column: 1/-1; padding: 40px; color: var(--text-muted); font-weight: 500;">Loading users...</div>
+            </div>
+        </div>
+
+        <div id="view-record-payment" class="view-section fullscreen-view">
+            <div class="card fullscreen-card" style="padding: 20px !important;">
+                <div style="display: flex; align-items: center; margin-bottom: 25px; gap: 15px;">
+                    <button type="button" onclick="window.history.length > 1 ? history.back() : window.switchView('dashboard')" style="background: none; border: none; font-size: 20px; color: var(--text-dark); cursor: pointer;"><i class="fas fa-arrow-left"></i></button>
+                    <h3 style="color: var(--text-dark); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin: 0;">
+                         <div style="width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,0.1); display:flex; align-items:center; justify-content:center; color:var(--success-color);"><i class="fas fa-receipt"></i></div>
+                         Record Payment
+                    </h3>
+                </div>
+                <form id="payForm">
+                    <input type="hidden" id="payUserId">
+                    <div class="form-group">
+                        <label>User Name (ID)</label>
+                        <input type="text" id="payUserName" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Month</label>
+                        <input type="month" id="payMonth" class="form-control" style="background:#fff;" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Status</label>
+                        <select id="payStatus" class="form-control" style="background:#fff;">
+                            <option value="Paid">Paid</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Advance">Advance</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" id="payAmount" class="form-control" style="background:#fff; font-weight: 600;" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, var(--success-color), #059669); margin-top: 10px;">Confirm Payment</button>
+                </form>
             </div>
         </div>
 
@@ -652,40 +688,6 @@
                     </select>
                 </div>
                 <button type="submit" id="saveBtn" class="btn-primary" style="margin-top: 10px;">Save User</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="payModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closePayModal()"><i class="fas fa-times"></i></span>
-            <h3 style="margin-bottom: 25px; color: var(--text-dark); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                 <div style="width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,0.1); display:flex; align-items:center; justify-content:center; color:var(--success-color);"><i class="fas fa-receipt"></i></div>
-                 Record Payment
-            </h3>
-            <form id="payForm">
-                <input type="hidden" id="payUserId">
-                <div class="form-group">
-                    <label>User Name (ID)</label>
-                    <input type="text" id="payUserName" class="form-control" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Select Month</label>
-                    <input type="month" id="payMonth" class="form-control" style="background:#fff;" required>
-                </div>
-                <div class="form-group">
-                    <label>Payment Status</label>
-                    <select id="payStatus" class="form-control" style="background:#fff;">
-                        <option value="Paid">Paid</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Advance">Advance</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Amount (₹)</label>
-                    <input type="number" id="payAmount" class="form-control" style="background:#fff; font-weight: 600;" required>
-                </div>
-                <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, var(--success-color), #059669); margin-top: 10px;">Confirm Payment</button>
             </form>
         </div>
     </div>
@@ -793,6 +795,10 @@
                         loader.style.display = 'none';
                         mainContent.style.display = 'block';
                         initRealTimeListeners(); 
+                        
+                        // History Initial Load Support
+                        const hashView = window.location.hash.replace('#', '') || 'dashboard';
+                        window.switchView(hashView, false);
                     } else {
                         window.location.href = "user.html";
                     }
@@ -800,6 +806,12 @@
             } else {
                 window.location.href = "index.html";
             }
+        });
+
+        // Add popstate listener for back/forward support
+        window.addEventListener('popstate', (e) => {
+            const view = e.state && e.state.view ? e.state.view : (window.location.hash.replace('#', '') || 'dashboard');
+            window.switchView(view, false);
         });
 
         // --- REAL-TIME LISTENERS ---
@@ -1418,11 +1430,9 @@
                 const now = new Date();
                 document.getElementById('payMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
                 document.getElementById('payStatus').value = 'Paid'; 
-                document.getElementById('payModal').style.display = 'block';
+                window.switchView('record-payment');
             }
         };
-
-        window.closePayModal = () => { document.getElementById('payModal').style.display = 'none'; };
 
         document.getElementById('payForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1432,9 +1442,15 @@
             const amount = document.getElementById('payAmount').value;
             const existingPayment = globalPayments.find(p => p.userId === uid && p.month === month && p.status !== 'Repaid');
             if (existingPayment) {
-                update(ref(db, `payments/${existingPayment.id}`), { status, amount, timestamp: Date.now() }).then(() => { alert("Payment Updated!"); window.closePayModal(); });
+                update(ref(db, `payments/${existingPayment.id}`), { status, amount, timestamp: Date.now() }).then(() => { 
+                    alert("Payment Updated!"); 
+                    window.history.length > 1 ? history.back() : window.switchView('dashboard');
+                });
             } else {
-                push(ref(db, 'payments'), { userId: uid, month, status, amount, timestamp: Date.now() }).then(() => { alert("Payment Recorded!"); window.closePayModal(); });
+                push(ref(db, 'payments'), { userId: uid, month, status, amount, timestamp: Date.now() }).then(() => { 
+                    alert("Payment Recorded!"); 
+                    window.history.length > 1 ? history.back() : window.switchView('dashboard');
+                });
             }
         });
 
@@ -1555,10 +1571,14 @@
         };
 
         // Syncs active states between Desktop Sidebar and Mobile Bottom Nav
-        window.switchView = (viewName) => {
+        window.switchView = (viewName, pushState = true) => {
             // Hide all views and auto-close the filter container if open
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
             document.getElementById('filterContainer').style.display = 'none';
+            
+            if (pushState) {
+                history.pushState({ view: viewName }, '', '#' + viewName);
+            }
             
             // Toggle Filter Sections based on view
             const dashSec = document.getElementById('dashboardFilterSection');
@@ -1584,12 +1604,15 @@
             } else if (viewName === 'add-users') {
                 if(userSec) userSec.style.display = 'block';
                 if(searchToggle) searchToggle.style.display = 'block';
+            } else if (viewName === 'record-payment') {
+                if(searchToggle) searchToggle.style.display = 'none';
             } else {
                 if(searchToggle) searchToggle.style.display = 'none';
             }
 
             // Show target view
-            document.getElementById(`view-${viewName}`).classList.add('active-view');
+            const targetView = document.getElementById(`view-${viewName}`);
+            if (targetView) targetView.classList.add('active-view');
             
             // Dynamic Title Update globally
             const viewTitles = {
@@ -1597,7 +1620,8 @@
                 'transactions': 'Transaction History',
                 'payment': 'Payment Management',
                 'add-users': 'User Management',
-                'repay-pending': 'Repay Pending Withdrawals'
+                'repay-pending': 'Repay Pending Withdrawals',
+                'record-payment': 'Record Payment'
             };
             const headerTitle = document.getElementById('headerTitle');
             if (headerTitle) {
@@ -1612,6 +1636,7 @@
                 'dashboard': ['nav-dash', 'bot-nav-dash'],
                 'transactions': [], // hidden view linked from dash
                 'repay-pending': [], // hidden view linked from dash
+                'record-payment': [],
                 'payment': ['nav-pay', 'bot-nav-pay'],
                 'add-users': ['nav-users', 'bot-nav-users']
             };
@@ -1638,7 +1663,6 @@
         window.onclick = function(event) {
             // Close modals logic
             if (event.target == document.getElementById('userModal')) closeModal();
-            if (event.target == document.getElementById('payModal')) closePayModal();
             if (event.target == document.getElementById('repayModal')) closeRepayModal();
             if (event.target == document.getElementById('historyModal')) closeHistoryModal();
             if (event.target == document.getElementById('withdrawalModal')) closeWithdrawalModal();

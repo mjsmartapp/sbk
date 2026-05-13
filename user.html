@@ -593,6 +593,31 @@
             if (targetNav) targetNav.classList.add('active');
         };
 
+        function formatMonthYear(monthStr) {
+            if (!monthStr || monthStr === '-') return '-';
+            const parts = monthStr.split('-');
+            if(parts.length !== 2) return monthStr;
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const mIdx = parseInt(parts[1], 10) - 1;
+            return `${months[mIdx]}, ${parts[0]}`;
+        }
+
+        function calculateRepayEndMonth(monthStr, durationMonths) {
+            if (!monthStr || monthStr === '-') return '-';
+            const parts = monthStr.split('-');
+            if(parts.length !== 2) return monthStr;
+            let year = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10) - 1; // 0-based
+            let duration = parseInt(durationMonths, 10) || 0;
+            
+            let endMonth = month + duration;
+            year += Math.floor(endMonth / 12);
+            endMonth = endMonth % 12;
+            
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            return `${months[endMonth]} ${year}`;
+        }
+
         function initUserDashboard(uid) {
             // Show loader bar
             loader.style.display = 'block';
@@ -662,13 +687,39 @@
                 return;
             }
 
+            pendingWithdrawals.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
             pendingWithdrawals.forEach(w => {
                 const user = globalUsers.find(u => u.id === w.withdrawnBy) || { name: 'Admin/Unknown', phone: '-' };
+                const formattedMonth = formatMonthYear(w.month);
+                const repayMonth = calculateRepayEndMonth(w.month, w.repayDuration);
+                
+                const d = new Date(w.timestamp || Date.now());
+                const pad = (n) => n.toString().padStart(2, '0');
+                const DD = pad(d.getDate());
+                const MM = pad(d.getMonth() + 1);
+                const YY = d.getFullYear().toString().slice(-2);
+                let hours = d.getHours();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; 
+                const HH = pad(hours);
+                const MIN = pad(d.getMinutes());
+                const SS = pad(d.getSeconds());
+                const dateStr = `${DD}/${MM}/${YY} ${HH}:${MIN}:${SS} ${ampm}`;
+                
                 const item = document.createElement('div');
-                item.style.cssText = "display: flex; justify-content: space-between; padding: 12px 15px; background: var(--bg-color); border-radius: var(--radius-md); align-items: center; border: 1px solid var(--border-color);";
+                item.style.cssText = "display: flex; justify-content: space-between; padding: 12px 15px; background: var(--bg-color); border-radius: var(--radius-md); align-items: center;";
                 item.innerHTML = `
-                    <div style="font-weight: 600; color: var(--text-dark);">${user.name}</div>
-                    <div style="font-weight: 700; color: var(--danger-color); font-size: 15px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-size: 11px; color: var(--text-muted);">${dateStr}</span>
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 14px;">${user.name}</span>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <span style="font-weight: bold; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 3px 8px; border-radius: 6px; background: rgba(79, 70, 229, 0.05); font-size: 11px; display: inline-block;" title="Withdrawal Month">${formattedMonth}</span>
+                            <span style="font-weight: bold; border: 1px solid var(--repay-color); color: var(--repay-color); padding: 3px 8px; border-radius: 6px; background: rgba(20, 184, 166, 0.05); font-size: 11px; display: inline-block;" title="Repay Month">${repayMonth}</span>
+                        </div>
+                    </div>
+                    <div style="font-weight: 700; color: var(--danger-color); font-size: 16px; text-align: right;">
                         ₹${w.repayTotal}
                     </div>
                 `;

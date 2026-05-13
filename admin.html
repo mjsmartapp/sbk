@@ -156,6 +156,25 @@
             width: 6px; height: 6px; border-radius: 50%; background-color: var(--primary-color);
         }
 
+        /* --- FULLSCREEN VIEW MODIFIER --- */
+        .fullscreen-view.active-view {
+            padding: 80px 20px 20px 20px;
+        }
+        .fullscreen-card {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        @media (min-width: 769px) {
+            .fullscreen-card .history-table {
+                background: var(--card-bg);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-sm);
+            }
+        }
+
         /* --- VIEWS --- */
         .view-section { 
             display: none; 
@@ -190,6 +209,7 @@
         .border-red::before { background: var(--danger-color); } .text-red { color: var(--danger-color) !important; }
         .border-amber::before { background: var(--warning-color); } .text-amber { color: var(--warning-color) !important; }
         .border-orange::before { background: var(--withdrawal-color); } .text-orange { color: var(--withdrawal-color) !important; }
+        .border-teal::before { background: var(--repay-color); } .text-teal { color: var(--repay-color) !important; }
 
         /* --- USER GRID LAYOUT --- */
         .user-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
@@ -286,6 +306,7 @@
             
             .main-content { margin-left: 0; width: 100%; }
             .view-section { padding: 90px 15px 90px 15px; } /* Separate scrolling padding on mobile */
+            .fullscreen-view.active-view { padding: 80px 10px 90px 10px; }
             .mobile-bottom-nav { display: block; }
             .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.6); backdrop-filter: blur(3px); z-index: 2999; }
             .overlay.active { display: block; }
@@ -303,9 +324,9 @@
             .history-table, .history-table tbody, .history-table tr, .history-table td { display: block; width: 100%; box-sizing: border-box; }
             .history-table thead { display: none; }
             .history-table tr { margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; box-shadow: var(--shadow-sm); background: var(--bg-color); }
-            .history-table td { display: flex; justify-content: space-between; align-items: center; text-align: right; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 10px 0; font-size: 14px; }
+            .history-table td { display: flex; justify-content: space-between; align-items: center; text-align: right; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 10px 0; font-size: 14px; gap: 10px;}
             .history-table td:last-child { border-bottom: none; padding-bottom: 0; }
-            .history-table td::before { content: attr(data-label); font-weight: 600; color: var(--text-muted); font-size: 12px; text-transform: uppercase; text-align: left; margin-right: 15px; }
+            .history-table td::before { content: attr(data-label); font-weight: 600; color: var(--text-muted); font-size: 12px; text-transform: uppercase; text-align: left; flex-shrink: 0; width: 40%; }
 
             .modal-content { padding: 20px; width: 95%; margin: 10% auto; border-radius: 20px; }
             .action-btn { padding: 10px; justify-content: center; flex: 1; }
@@ -426,7 +447,7 @@
 
     <main class="main-content" id="mainContent">
         
-        <div id="view-dashboard" class="view-section active-view">
+        <div id="view-dashboard" class="view-section fullscreen-view active-view">
             <div class="stat-grid">
                 <div class="stat-card border-blue">
                     <h3>Total Users</h3>
@@ -462,6 +483,16 @@
                     <div class="value text-blue" id="dashboardInterestAmount">₹0</div>
                 </div>
 
+                <div class="stat-card clickable border-teal" onclick="switchView('repay-pending')">
+                    <h3 style="color: var(--repay-color)">Repay Pending Count</h3>
+                    <div class="value text-teal" id="dashboardRepayPendingCount">0</div>
+                </div>
+
+                <div class="stat-card clickable border-teal" onclick="switchView('repay-pending')">
+                    <h3 style="color: var(--repay-color)">Repay Pending Amount</h3>
+                    <div class="value text-teal" id="dashboardRepayPendingAmount">₹0</div>
+                </div>
+
                 <div class="stat-card clickable border-orange" onclick="openWithdrawalModal()" style="grid-column: 1 / -1;">
                     <h3 style="color: var(--withdrawal-color)">Withdrawal Process</h3>
                     <div style="font-weight: 600; font-size: 15px; color: var(--text-dark); margin-top: 8px; display: flex; align-items: center; gap: 8px;">
@@ -480,33 +511,57 @@
             </div>
         </div>
 
-        <div id="view-transactions" class="view-section">
-            <div class="card"> 
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Date & Time</th>
-                            <th>Name</th>
-                            <th>Phone No</th>
-                            <th>Type</th>
-                            <th>Credit (CR)</th>
-                            <th>Debit (DR)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fullTransactionTableBody">
-                        <tr><td colspan="6" style="text-align: center; padding: 30px;">Loading data...</td></tr>
-                    </tbody>
-                </table>
+        <div id="view-transactions" class="view-section fullscreen-view">
+            <div class="card fullscreen-card"> 
+                <div class="table-container" style="width: 100%; overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Name</th>
+                                <th>Phone No</th>
+                                <th>Type</th>
+                                <th>Credit (CR)</th>
+                                <th>Debit (DR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fullTransactionTableBody">
+                            <tr><td colspan="6" style="text-align: center; padding: 30px;">Loading data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div id="view-payment" class="view-section">
+        <div id="view-repay-pending" class="view-section fullscreen-view">
+            <div class="card fullscreen-card"> 
+                <div class="table-container" style="width: 100%; overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Name</th>
+                                <th>Phone No</th>
+                                <th>Repay Month</th>
+                                <th>Duration (Months)</th>
+                                <th>Pending Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="repayPendingTableBody">
+                            <tr><td colspan="6" style="text-align: center; padding: 30px;">Loading data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-payment" class="view-section fullscreen-view">
             <div id="paymentGrid" class="user-grid">
                  <div style="text-align:center; width: 100%; grid-column: 1/-1; padding: 40px; color: var(--text-muted); font-weight: 500;">Loading payments...</div>
             </div>
         </div>
 
-        <div id="view-add-users" class="view-section">
+        <div id="view-add-users" class="view-section fullscreen-view">
             <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
                 <button class="btn-add" onclick="openModal()"><i class="fas fa-user-plus"></i> Add User</button>
             </div>
@@ -777,6 +832,57 @@
             });
         }
 
+        function formatDateTime(timestamp) {
+            if (!timestamp) return "-";
+            const d = new Date(timestamp);
+            const pad = (n) => n.toString().padStart(2, '0');
+            const DD = pad(d.getDate());
+            const MM = pad(d.getMonth() + 1);
+            const YYYY = d.getFullYear();
+            let hours = d.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            const HH = pad(hours);
+            const MIN = pad(d.getMinutes());
+            const SS = pad(d.getSeconds());
+            return `${DD}/${MM}/${YYYY} ${HH}:${MIN}:${SS} ${ampm}`;
+        }
+
+        function formatDateTimeWithMonthName(timestamp) {
+            if (!timestamp) return "-";
+            const d = new Date(timestamp);
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const pad = (n) => n.toString().padStart(2, '0');
+            const DD = pad(d.getDate());
+            const MonthName = months[d.getMonth()];
+            const YYYY = d.getFullYear();
+            let hours = d.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            const HH = pad(hours);
+            const MIN = pad(d.getMinutes());
+            const SS = pad(d.getSeconds());
+            return `${DD} <b>${MonthName}</b> ${YYYY}, ${HH}:${MIN}:${SS} ${ampm}`;
+        }
+
+        function calculateRepayEndMonth(monthStr, durationMonths) {
+            if (!monthStr || monthStr === '-') return '-';
+            const parts = monthStr.split('-');
+            if(parts.length !== 2) return monthStr;
+            let year = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10) - 1; // 0-based
+            let duration = parseInt(durationMonths, 10) || 0;
+            
+            let endMonth = month + duration;
+            year += Math.floor(endMonth / 12);
+            endMonth = endMonth % 12;
+            
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            return `${months[endMonth]} ${year}`;
+        }
+
         function updateViews() {
             window.renderUserGrid();
             window.renderPaymentGrid();
@@ -805,6 +911,10 @@
             let allTimeInterest = 0;
 
             let pendingUsersList = [];
+
+            let repayPendingCount = 0;
+            let repayPendingAmount = 0;
+            let repayPendingList = [];
 
             globalPayments.forEach(p => {
                 if(p.status === 'Paid' || p.status === 'Advance' || p.status === 'Repaid') {
@@ -842,6 +952,23 @@
                     monthlyWithdrawn += Number(w.withdrawnAmount || 0);
                     monthlyInterest += Number(w.interestAmount || 0);
                 }
+
+                // Calculate Repay Pending
+                const rTotal = Number(w.repayTotal || 0);
+                if (rTotal > 0) {
+                    repayPendingCount++;
+                    repayPendingAmount += rTotal;
+                    const user = globalUsers.find(u => u.id === w.withdrawnBy) || { name: 'Admin/Unknown', phone: '-' };
+                    repayPendingList.push({
+                        timestamp: w.timestamp || 0,
+                        dateStr: formatDateTimeWithMonthName(w.timestamp),
+                        name: user.name,
+                        phone: user.phone,
+                        amount: rTotal,
+                        month: calculateRepayEndMonth(w.month, w.repayDuration),
+                        duration: w.repayDuration || '-'
+                    });
+                }
             });
 
             const allTimeNetReceived = Math.max(0, allTimePayments - allTimeWithdrawn);
@@ -855,6 +982,8 @@
             document.getElementById('dashboardReceivedAmount').innerText = `₹${monthlyPayments}`; // Selected month payments
             document.getElementById('dashboardInterestAmount').innerText = `₹${monthlyInterest}`;
             document.getElementById('dashboardCashInHand').innerText = `₹${cashInHand}`; // All time logic
+            document.getElementById('dashboardRepayPendingCount').innerText = repayPendingCount;
+            document.getElementById('dashboardRepayPendingAmount').innerText = `₹${repayPendingAmount}`;
 
             const listContainer = document.getElementById('dueUsersList');
             listContainer.innerHTML = "";
@@ -878,25 +1007,30 @@
             } else {
                 listContainer.innerHTML = "<p style='color: var(--success-color); text-align: center; padding: 15px; font-weight:600;'><i class='fas fa-check-circle' style='margin-right:8px;'></i>No pending dues for selected month!</p>";
             }
-        };
 
-        // --- FULL SCREEN TRANSACTION HISTORY ---
-        function formatDateTime(timestamp) {
-            if (!timestamp) return "-";
-            const d = new Date(timestamp);
-            const pad = (n) => n.toString().padStart(2, '0');
-            const DD = pad(d.getDate());
-            const MM = pad(d.getMonth() + 1);
-            const YYYY = d.getFullYear();
-            let hours = d.getHours();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; 
-            const HH = pad(hours);
-            const MIN = pad(d.getMinutes());
-            const SS = pad(d.getSeconds());
-            return `${DD}/${MM}/${YYYY} ${HH}:${MIN}:${SS} ${ampm}`;
-        }
+            // Render Repay Pending List Full Screen View
+            repayPendingList.sort((a, b) => b.timestamp - a.timestamp);
+            const repayTableBody = document.getElementById('repayPendingTableBody');
+            if (repayTableBody) {
+                repayTableBody.innerHTML = "";
+                if (repayPendingList.length > 0) {
+                    repayPendingList.forEach(t => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td data-label="Date/Time" style="color:var(--text-muted); font-size:13px; text-align: right;">${t.dateStr}</td>
+                            <td data-label="Name" style="font-weight: 600; text-align: right;">${t.name}</td>
+                            <td data-label="Phone No" style="color:var(--text-muted); text-align: right;">${t.phone}</td>
+                            <td data-label="Repay Month" style="text-align: right;"><span style="font-weight: bold; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 4px 10px; border-radius: 6px; background: rgba(79, 70, 229, 0.05); font-size: 13px; display: inline-block;">${t.month}</span></td>
+                            <td data-label="Duration (Months)" style="color:var(--info-color); font-weight: 500; text-align: right;">${t.duration}</td>
+                            <td data-label="Pending Amount" style="text-align: right;"><span style="color:var(--danger-color); font-weight:700; font-size:15px;">₹${t.amount}</span></td>
+                        `;
+                        repayTableBody.appendChild(row);
+                    });
+                } else {
+                    repayTableBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px; color:var(--text-muted); font-weight:500;'>No pending repayments found.</td></tr>";
+                }
+            }
+        };
 
         // Attached to window to be accessible from inline HTML events
         window.renderFullTransactions = function() {
@@ -981,12 +1115,12 @@
 
                     // Using data-label for mobile view mapping
                     row.innerHTML = `
-                        <td data-label="Date & Time" style="color:var(--text-muted); font-size:13px;">${t.dateStr}</td>
-                        <td data-label="Name" style="font-weight: 600;">${t.name}</td>
-                        <td data-label="Phone No" style="color:var(--text-muted);">${t.phone}</td>
-                        <td data-label="Type"><span class="status-badge" style="background:${typeColor}; box-shadow:none;">${t.type}</span></td>
-                        <td data-label="Credit (CR)"><span style="color:var(--success-color); font-weight:700; font-size:15px;">${t.cr > 0 ? '₹' + t.cr : '-'}</span></td>
-                        <td data-label="Debit (DR)"><span style="color:var(--danger-color); font-weight:700; font-size:15px;">${t.dr > 0 ? '₹' + t.dr : '-'}</span></td>
+                        <td data-label="Date & Time" style="color:var(--text-muted); font-size:13px; text-align: right;">${t.dateStr}</td>
+                        <td data-label="Name" style="font-weight: 600; text-align: right;">${t.name}</td>
+                        <td data-label="Phone No" style="color:var(--text-muted); text-align: right;">${t.phone}</td>
+                        <td data-label="Type" style="text-align: right;"><span class="status-badge" style="background:${typeColor}; box-shadow:none;">${t.type}</span></td>
+                        <td data-label="Credit (CR)" style="text-align: right;"><span style="color:var(--success-color); font-weight:700; font-size:15px;">${t.cr > 0 ? '₹' + t.cr : '-'}</span></td>
+                        <td data-label="Debit (DR)" style="text-align: right;"><span style="color:var(--danger-color); font-weight:700; font-size:15px;">${t.dr > 0 ? '₹' + t.dr : '-'}</span></td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -1261,9 +1395,9 @@
                     else if(record.status === "Repaid") { statusColor = "var(--repay-color)"; statusClass="status-repaid"; }
                     
                     row.innerHTML = `
-                        <td data-label="Month" style="font-weight:600;">${record.month}</td>
-                        <td data-label="Status"><span class="status-badge ${statusClass}" style="box-shadow:none;">${record.status}</span></td>
-                        <td data-label="Amount" style="font-weight:700; color:${statusColor}; font-size:15px;">${record.amount}</td>
+                        <td data-label="Month" style="font-weight:600; text-align: right;">${record.month}</td>
+                        <td data-label="Status" style="text-align: right;"><span class="status-badge ${statusClass}" style="box-shadow:none;">${record.status}</span></td>
+                        <td data-label="Amount" style="font-weight:700; color:${statusColor}; font-size:15px; text-align: right;">${record.amount}</td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -1462,7 +1596,8 @@
                 'dashboard': 'Dashboard',
                 'transactions': 'Transaction History',
                 'payment': 'Payment Management',
-                'add-users': 'User Management'
+                'add-users': 'User Management',
+                'repay-pending': 'Repay Pending Withdrawals'
             };
             const headerTitle = document.getElementById('headerTitle');
             if (headerTitle) {
@@ -1476,6 +1611,7 @@
             const syncMap = {
                 'dashboard': ['nav-dash', 'bot-nav-dash'],
                 'transactions': [], // hidden view linked from dash
+                'repay-pending': [], // hidden view linked from dash
                 'payment': ['nav-pay', 'bot-nav-pay'],
                 'add-users': ['nav-users', 'bot-nav-users']
             };
